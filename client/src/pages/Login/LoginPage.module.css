@@ -1,0 +1,81 @@
+.page {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.card {
+  width: min(100%, 480px);
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.subtitle {
+  margin-top: -0.25rem;
+  color: var(--color-text-muted);
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.field label {
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0.95rem 1rem;
+  outline: none;
+  background: #fff;
+}
+
+.field input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+}
+
+.button {
+  margin-top: 0.25rem;
+  border: none;
+  border-radius: 14px;
+  padding: 0.95rem 1rem;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.footerText {
+  margin-top: 1.25rem;
+  color: var(--color-text-muted);
+}
+
+.footerText a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 700;
+}

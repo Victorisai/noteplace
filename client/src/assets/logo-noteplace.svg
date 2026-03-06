@@ -1,0 +1,24 @@
+<svg width="220" height="60" viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="noteplaceGradient" x1="0" y1="0" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(6,6)">
+    <rect x="0" y="0" width="48" height="48" rx="14" fill="url(#noteplaceGradient)"/>
+    <path d="M12 14C12 11.7909 13.7909 10 16 10H32C34.2091 10 36 11.7909 36 14V24C36 26.2091 34.2091 28 32 28H24.5L19 33V28H16C13.7909 28 12 26.2091 12 24V14Z" fill="white" fill-opacity="0.18"/>
+    <path d="M17 27V15H20.2L27.5 23.8V15H31V27H27.9L20.5 18.1V27H17Z" fill="white"/>
+  </g>
+
+  <text x="66" y="25" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">
+    Note
+  </text>
+  <text x="119" y="25" fill="#4F46E5" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">
+    Place
+  </text>
+  <text x="67" y="42" fill="#6B7280" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="500" letter-spacing="1.2">
+    SHARE YOUR THOUGHTS
+  </text>
+</svg>
