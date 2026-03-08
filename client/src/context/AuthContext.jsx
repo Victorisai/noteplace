@@ -30,24 +30,28 @@ export function AuthProvider({ children }) {
     loadUser();
   }, []);
 
-  const login = (token, userData) => {
+  function login(token, userData) {
     localStorage.setItem('noteplace_token', token);
     setUser(userData);
-  };
+  }
 
-  const logout = () => {
+  function logout() {
     localStorage.removeItem('noteplace_token');
     setUser(null);
-  };
+  }
+
+  function updateUser(nextUserData) {
+    setUser(nextUserData);
+  }
 
   const value = useMemo(
     () => ({
       user,
-      setUser,
-      login,
-      logout,
       authLoading,
       isAuthenticated: Boolean(user),
+      login,
+      logout,
+      updateUser,
     }),
     [user, authLoading]
   );
@@ -56,5 +60,11 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error('useAuth debe usarse dentro de AuthProvider');
+  }
+
+  return context;
 }

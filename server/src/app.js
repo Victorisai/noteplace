@@ -2,12 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth.routes');
 const notesRoutes = require('./routes/notes.routes');
+const searchRoutes = require('./routes/search.routes');
 
 const app = express();
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.CLIENT_URL,
     credentials: true,
   })
 );
@@ -23,5 +24,6 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/search', searchRoutes);
 
 module.exports = app;

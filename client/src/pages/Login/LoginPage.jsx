@@ -2,11 +2,18 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
+import useAuthRedirect from '../../hooks/useAuthRedirect';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
+import useToast from '../../hooks/useToast';
 import styles from './LoginPage.module.css';
 
 function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { showToast } = useToast();
+
+  useDocumentTitle('Login | NotePlace');
+  useAuthRedirect('/feed');
 
   const [form, setForm] = useState({
     emailOrUsername: '',
@@ -33,9 +40,11 @@ function LoginPage() {
     try {
       const data = await loginUser(form);
       login(data.token, data.user);
+      showToast(`Bienvenido, ${data.user.name}`, 'success');
       navigate('/feed');
     } catch (err) {
       setError(err.message);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -45,9 +54,7 @@ function LoginPage() {
     <section className={styles.page}>
       <div className={styles.card}>
         <h1>Iniciar sesión</h1>
-        <p className={styles.subtitle}>
-          Entra a tu cuenta de NotePlace
-        </p>
+        <p className={styles.subtitle}>Entra a tu cuenta de NotePlace</p>
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.field}>

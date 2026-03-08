@@ -1,0 +1,76 @@
+.card {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.header {
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.avatar,
+.line,
+.lineShort,
+.lineTiny,
+.lineMedium {
+  background: linear-gradient(
+    90deg,
+    #e5e7eb 25%,
+    #f3f4f6 50%,
+    #e5e7eb 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 999px;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+}
+
+.userInfo {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.lineShort {
+  height: 14px;
+  width: 120px;
+}
+
+.lineTiny {
+  height: 12px;
+  width: 80px;
+}
+
+.content {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.line {
+  height: 14px;
+  width: 100%;
+}
+
+.lineMedium {
+  height: 14px;
+  width: 70%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

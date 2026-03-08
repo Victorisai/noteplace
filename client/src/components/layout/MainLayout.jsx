@@ -1,11 +1,33 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Logo from '../ui/Logo';
 import { useAuth } from '../../context/AuthContext';
+import { getNotesByUsername } from '../../services/noteService';
+import SearchPanel from '../common/SearchPanel';
 import styles from './MainLayout.module.css';
 
 function MainLayout() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [notesCount, setNotesCount] = useState(0);
+
+  useEffect(() => {
+    async function loadCount() {
+      if (!user?.username) {
+        setNotesCount(0);
+        return;
+      }
+
+      try {
+        const data = await getNotesByUsername(user.username);
+        setNotesCount(data.profile?.notes_count || 0);
+      } catch (error) {
+        setNotesCount(0);
+      }
+    }
+
+    loadCount();
+  }, [user?.username]);
 
   function handleLogout() {
     logout();
@@ -19,6 +41,10 @@ function MainLayout() {
           <Link to="/" className={styles.brand}>
             <Logo />
           </Link>
+
+          <div className={styles.searchDesktop}>
+            <SearchPanel />
+          </div>
 
           <nav className={styles.nav}>
             <NavLink
@@ -47,7 +73,7 @@ function MainLayout() {
                     isActive ? `${styles.link} ${styles.active}` : styles.link
                   }
                 >
-                  @{user.username}
+                  @{user.username} ({notesCount})
                 </NavLink>
 
                 <button className={styles.logoutButton} onClick={handleLogout}>

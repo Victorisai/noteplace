@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import styles from './HomePage.module.css';
 
 function HomePage() {
+  useDocumentTitle('NotePlace | Comparte tus ideas');
+
   return (
     <section className={styles.hero}>
       <div className={styles.content}>
@@ -23,17 +26,13 @@ function HomePage() {
 
       <div className={styles.preview}>
         <div className={styles.card}>
-          <h3>@isai_cass</h3>
-          <p>
-            Construyendo en público desde Holbox 🚀
-          </p>
+          <h3>@isai_dev</h3>
+          <p>Construyendo en público desde Quintana Roo 🚀</p>
         </div>
 
         <div className={styles.card}>
           <h3>@noteplace</h3>
-          <p>
-            Comparte una idea corta, una reflexión o una actualización rápida.
-          </p>
+          <p>Comparte una idea corta, una reflexión o una actualización rápida.</p>
         </div>
       </div>
     </section>

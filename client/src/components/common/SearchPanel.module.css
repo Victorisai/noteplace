@@ -1,0 +1,66 @@
+.panel {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.9rem 1rem;
+  background: white;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+}
+
+.results {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-md);
+  padding: 1rem;
+  z-index: 40;
+}
+
+.section + .section {
+  margin-top: 1rem;
+}
+
+.section h4 {
+  margin: 0 0 0.75rem;
+}
+
+.list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.resultItem {
+  display: flex;
+  gap: 0.75rem;
+  text-decoration: none;
+  padding: 0.65rem;
+  border-radius: 14px;
+}
+
+.resultItem:hover {
+  background: #f8fafc;
+}
+
+.resultItem p {
+  margin: 0.15rem 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.state {
+  margin: 0;
+  color: var(--color-text-muted);
+}

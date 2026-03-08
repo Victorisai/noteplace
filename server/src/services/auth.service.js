@@ -108,8 +108,49 @@ async function getCurrentUser(userId) {
   return result.rows[0];
 }
 
+async function updateUserProfile(userId, { name, username, bio, avatar_url }) {
+  const trimmedName = name.trim();
+  const normalizedUsername = username.trim().toLowerCase();
+  const trimmedBio = bio.trim();
+  const trimmedAvatar = avatar_url.trim();
+
+  if (!trimmedName || !normalizedUsername) {
+    throw new Error('Nombre y username son obligatorios');
+  }
+
+  const existingUser = await pool.query(
+    `SELECT id, username
+     FROM users
+     WHERE username = $1 AND id != $2
+     LIMIT 1`,
+    [normalizedUsername, userId]
+  );
+
+  if (existingUser.rows.length > 0) {
+    throw new Error('El username ya está en uso');
+  }
+
+  const result = await pool.query(
+    `UPDATE users
+     SET name = $1,
+         username = $2,
+         bio = $3,
+         avatar_url = $4
+     WHERE id = $5
+     RETURNING id, name, username, email, bio, avatar_url, created_at`,
+    [trimmedName, normalizedUsername, trimmedBio, trimmedAvatar, userId]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  return result.rows[0];
+}
+
 module.exports = {
   registerUser,
   loginUser,
   getCurrentUser,
+  updateUserProfile,
 };

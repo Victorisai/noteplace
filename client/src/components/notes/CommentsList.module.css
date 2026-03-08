@@ -1,0 +1,35 @@
+.list {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.item {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.body {
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+
+.content {
+  margin: 0.45rem 0 0;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.empty {
+  margin-top: 1rem;
+  color: var(--color-text-muted);
+}

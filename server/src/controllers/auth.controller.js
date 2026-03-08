@@ -2,6 +2,7 @@ const {
   registerUser,
   loginUser,
   getCurrentUser,
+  updateUserProfile,
 } = require('../services/auth.service');
 
 async function register(req, res) {
@@ -70,8 +71,31 @@ async function me(req, res) {
   }
 }
 
+async function updateProfile(req, res) {
+  try {
+    const { name, username, bio = '', avatar_url = '' } = req.body;
+
+    const user = await updateUserProfile(req.user.id, {
+      name,
+      username,
+      bio,
+      avatar_url,
+    });
+
+    return res.status(200).json({
+      message: 'Perfil actualizado correctamente',
+      user,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message || 'Error al actualizar perfil',
+    });
+  }
+}
+
 module.exports = {
   register,
   login,
   me,
+  updateProfile,
 };

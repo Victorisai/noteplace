@@ -1,11 +1,12 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import PageLoader from '../common/PageLoader';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, authLoading } = useAuth();
 
   if (authLoading) {
-    return <p style={{ padding: '2rem' }}>Cargando...</p>;
+    return <PageLoader text="Validando sesión..." />;
   }
 
   if (!isAuthenticated) {

@@ -17,3 +17,10 @@ export async function loginUser(payload) {
 export async function getMe() {
   return apiRequest('/auth/me');
 }
+
+export async function updateMyProfile(payload) {
+  return apiRequest('/auth/me', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}

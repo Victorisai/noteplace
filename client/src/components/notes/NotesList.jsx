@@ -1,7 +1,13 @@
 import NoteCard from './NoteCard';
 import styles from './NotesList.module.css';
 
-function NotesList({ notes, onDelete, deletingId, emptyMessage = 'Aún no hay notas.' }) {
+function NotesList({
+  notes,
+  onDelete,
+  onUpdate,
+  deletingId,
+  emptyMessage = 'Aún no hay notas.',
+}) {
   if (!notes.length) {
     return (
       <div className={styles.empty}>
@@ -17,6 +23,7 @@ function NotesList({ notes, onDelete, deletingId, emptyMessage = 'Aún no hay no
           key={note.id}
           note={note}
           onDelete={onDelete}
+          onUpdate={onUpdate}
           deleting={deletingId === note.id}
         />
       ))}

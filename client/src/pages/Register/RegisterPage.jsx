@@ -2,11 +2,18 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
+import useAuthRedirect from '../../hooks/useAuthRedirect';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
+import useToast from '../../hooks/useToast';
 import styles from './RegisterPage.module.css';
 
 function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { showToast } = useToast();
+
+  useDocumentTitle('Registro | NotePlace');
+  useAuthRedirect('/feed');
 
   const [form, setForm] = useState({
     name: '',
@@ -35,9 +42,11 @@ function RegisterPage() {
     try {
       const data = await registerUser(form);
       login(data.token, data.user);
+      showToast('Cuenta creada correctamente', 'success');
       navigate('/feed');
     } catch (err) {
       setError(err.message);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -47,9 +56,7 @@ function RegisterPage() {
     <section className={styles.page}>
       <div className={styles.card}>
         <h1>Crear cuenta</h1>
-        <p className={styles.subtitle}>
-          Únete a NotePlace y comparte tus ideas
-        </p>
+        <p className={styles.subtitle}>Únete a NotePlace y comparte tus ideas</p>
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.field}>

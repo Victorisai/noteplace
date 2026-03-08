@@ -1,0 +1,25 @@
+.form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  outline: none;
+}
+
+.button {
+  justify-self: end;
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}

@@ -1,0 +1,32 @@
+.avatar,
+.avatarFallback {
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  display: grid;
+  place-items: center;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.sm {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.md {
+  width: 52px;
+  height: 52px;
+  font-size: 1.1rem;
+}
+
+.lg {
+  width: 88px;
+  height: 88px;
+  font-size: 1.9rem;
+}
