@@ -5,6 +5,7 @@ const {
   getProfileByUsername,
   getUserReplies,
   getUserLikedNotes,
+  getUserBookmarkedNotes,
   updateNote,
   deleteNote,
   toggleLike,
@@ -73,6 +74,15 @@ async function getUserLikesController(req, res) {
   }
 }
 
+async function getUserBookmarksController(req, res) {
+  try {
+    const notes = await getUserBookmarkedNotes(req.params.username, req.user?.id || null);
+    return res.status(200).json({ notes });
+  } catch (error) {
+    return res.status(400).json({ message: error.message || 'Error al obtener guardados' });
+  }
+}
+
 async function edit(req, res) {
   try {
     const note = await updateNote({ noteId: Number(req.params.id), userId: req.user.id, content: req.body.content });
@@ -134,6 +144,7 @@ module.exports = {
   getProfile,
   getUserRepliesController,
   getUserLikesController,
+  getUserBookmarksController,
   edit,
   remove,
   like,

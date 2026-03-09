@@ -8,6 +8,7 @@ const {
   getProfile,
   getUserRepliesController,
   getUserLikesController,
+  getUserBookmarksController,
   edit,
   remove,
   like,
@@ -24,6 +25,7 @@ router.get('/user/:username/profile', optionalAuth, getProfile);
 router.get('/user/:username', optionalAuth, getByUsername);
 router.get('/user/:username/replies', getUserRepliesController);
 router.get('/user/:username/likes', optionalAuth, getUserLikesController);
+router.get('/user/:username/bookmarks', optionalAuth, getUserBookmarksController);
 router.get('/:id/comments', getComments);
 
 router.post('/', protect, noteUpload.array('images', 4), create);

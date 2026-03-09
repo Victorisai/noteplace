@@ -62,3 +62,7 @@ export async function getRepliesByUsername(username) {
 export async function getLikedNotesByUsername(username) {
   return apiRequest(`/notes/user/${username}/likes`);
 }
+
+export async function getBookmarkedNotesByUsername(username) {
+  return apiRequest(`/notes/user/${username}/bookmarks`);
+}

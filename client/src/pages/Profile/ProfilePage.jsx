@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import NotesList from '../../components/notes/NotesList';
-import { deleteNote, getLikedNotesByUsername, getNotesByUsername, getProfileSummary, getRepliesByUsername } from '../../services/noteService';
+import {
+  deleteNote,
+  getBookmarkedNotesByUsername,
+  getLikedNotesByUsername,
+  getNotesByUsername,
+  getProfileSummary,
+  getRepliesByUsername,
+} from '../../services/noteService';
 import { toggleFollow } from '../../services/followService';
 import { useAuth } from '../../context/AuthContext';
 import useToast from '../../hooks/useToast';
@@ -20,6 +27,7 @@ function ProfilePage() {
   const [notes, setNotes] = useState([]);
   const [replies, setReplies] = useState([]);
   const [likes, setLikes] = useState([]);
+  const [bookmarks, setBookmarks] = useState([]);
   const [tab, setTab] = useState('notes');
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
@@ -32,16 +40,18 @@ function ProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       setLoading(true);
-      const [profileData, notesData, repliesData, likesData] = await Promise.all([
+      const [profileData, notesData, repliesData, likesData, bookmarksData] = await Promise.all([
         getProfileSummary(username),
         getNotesByUsername(username),
         getRepliesByUsername(username),
         getLikedNotesByUsername(username),
+        getBookmarkedNotesByUsername(username),
       ]);
       setProfile(profileData.profile);
       setNotes(notesData.notes || []);
       setReplies(repliesData.replies || []);
       setLikes(likesData.notes || []);
+      setBookmarks(bookmarksData.notes || []);
       setLoading(false);
     }
     loadProfile();
@@ -130,11 +140,13 @@ function ProfilePage() {
         <button type="button" className={`${styles.tabButton} ${tab === 'notes' ? styles.tabButtonActive : ''}`} onClick={() => setTab('notes')}>Notas</button>
         <button type="button" className={`${styles.tabButton} ${tab === 'replies' ? styles.tabButtonActive : ''}`} onClick={() => setTab('replies')}>Respuestas</button>
         <button type="button" className={`${styles.tabButton} ${tab === 'likes' ? styles.tabButtonActive : ''}`} onClick={() => setTab('likes')}>Likes</button>
+        <button type="button" className={`${styles.tabButton} ${tab === 'bookmarks' ? styles.tabButtonActive : ''}`} onClick={() => setTab('bookmarks')}>Guardados</button>
       </div>
 
       {tab === 'notes' ? <NotesList notes={notes} onDelete={(id) => { setSelectedNoteId(id); setConfirmOpen(true); }} deletingId={deletingId} onUpdate={(u) => setNotes((prev) => prev.map((n) => n.id === u.id ? u : n))} /> : null}
       {tab === 'replies' ? <ul>{replies.map((r) => <li key={r.id}>{r.content}</li>)}</ul> : null}
       {tab === 'likes' ? <NotesList notes={likes} onDelete={() => {}} onUpdate={() => {}} /> : null}
+      {tab === 'bookmarks' ? <NotesList notes={bookmarks} onDelete={() => {}} onUpdate={() => {}} /> : null}
 
       <ConfirmModal isOpen={confirmOpen} title="Eliminar nota" description="Esta acción no se puede deshacer." confirmText="Eliminar" cancelText="Cancelar" onConfirm={handleConfirmDelete} onCancel={() => { setConfirmOpen(false); setSelectedNoteId(null); }} loading={Boolean(deletingId)} />
     </section>

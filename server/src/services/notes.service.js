@@ -187,6 +187,21 @@ async function getUserLikedNotes(username, viewerUserId = null) {
   return likedResult.rows.map(mapNoteRow);
 }
 
+async function getUserBookmarkedNotes(username, viewerUserId = null) {
+  const normalizedUsername = username.trim().toLowerCase();
+  const bookmarkedResult = await pool.query(
+    `${NOTE_SELECT}
+     INNER JOIN bookmarks b2 ON b2.note_id = n.id
+     INNER JOIN users bu ON bu.id = b2.user_id
+     WHERE bu.username = $1
+     GROUP BY n.id, u.id
+     ORDER BY n.created_at DESC`,
+    [normalizedUsername, viewerUserId]
+  );
+
+  return bookmarkedResult.rows.map(mapNoteRow);
+}
+
 async function updateNote({ noteId, userId, content }) {
   const trimmedContent = content.trim();
   if (!trimmedContent) throw new Error('La nota no puede estar vacía');
@@ -307,6 +322,7 @@ module.exports = {
   getProfileByUsername,
   getUserReplies,
   getUserLikedNotes,
+  getUserBookmarkedNotes,
   updateNote,
   deleteNote,
   toggleLike,

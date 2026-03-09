@@ -1,6 +1,123 @@
-.panel { background: var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px; }
-.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-.list { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
-.item { padding:8px; background:var(--surface-2); border-radius:8px; }
-.read { opacity:.7; }
-.state { color:var(--text-muted); }
+.panel {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.secondaryButton,
+.readButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondaryButton {
+  background: var(--color-bg-soft);
+  color: var(--color-text);
+}
+
+.readButton {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.secondaryButton:disabled,
+.readButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.unread {
+  margin: 0.65rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.error {
+  margin: 0.7rem 0 0;
+  color: #b91c1c;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.list {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.item {
+  padding: 0.7rem 0.75rem;
+  background: var(--color-bg-soft);
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.item:not(.read) {
+  border-color: var(--color-primary-soft);
+}
+
+.message {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
+
+.date {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.read {
+  opacity: 0.74;
+}
+
+.state {
+  margin: 0.8rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 980px) {
+  .panel {
+    border-radius: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    justify-content: flex-end;
+  }
+}
