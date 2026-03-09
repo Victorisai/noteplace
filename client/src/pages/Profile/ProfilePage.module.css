@@ -74,6 +74,38 @@
   font-size: 1.35rem;
 }
 
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.35rem;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.tabButton {
+  border: 0;
+  border-radius: 12px;
+  padding: 0.65rem 0.95rem;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.tabButton:hover {
+  background: var(--color-bg-soft);
+  color: var(--color-text);
+}
+
+.tabButtonActive {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
 .error {
   color: #b91c1c;
   font-weight: 700;
@@ -82,5 +114,52 @@
 @media (max-width: 640px) {
   .profileCard {
     flex-direction: column;
+  }
+
+  .tabs {
+    width: 100%;
+  }
+
+  .tabButton {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+.followButton {
+  margin-top: 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  min-height: 42px;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.followButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.followButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.followButtonFollowing {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+@media (max-width: 640px) {
+  .followButton {
+    width: 100%;
   }
 }

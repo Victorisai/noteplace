@@ -4,6 +4,7 @@ import NotesList from '../../components/notes/NotesList';
 import { deleteNote, getLikedNotesByUsername, getNotesByUsername, getProfileSummary, getRepliesByUsername } from '../../services/noteService';
 import { toggleFollow } from '../../services/followService';
 import { useAuth } from '../../context/AuthContext';
+import useToast from '../../hooks/useToast';
 import EditProfileForm from '../../components/profile/EditProfileForm';
 import Avatar from '../../components/ui/Avatar';
 import PageLoader from '../../components/common/PageLoader';
@@ -14,6 +15,7 @@ import styles from './ProfilePage.module.css';
 function ProfilePage() {
   const { username } = useParams();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [profile, setProfile] = useState(null);
   const [notes, setNotes] = useState([]);
   const [replies, setReplies] = useState([]);
@@ -23,6 +25,7 @@ function ProfilePage() {
   const [deletingId, setDeletingId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState(null);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const isOwnProfile = user?.username === profile?.username;
 
@@ -45,12 +48,39 @@ function ProfilePage() {
   }, [username]);
 
   async function handleFollowToggle() {
-    const data = await toggleFollow(profile.id);
-    setProfile((prev) => ({
-      ...prev,
-      is_following: data.is_following,
-      followers_count: prev.followers_count + (data.is_following ? 1 : -1),
-    }));
+    if (!profile?.id || followLoading) return;
+
+    try {
+      setFollowLoading(true);
+      const data = await toggleFollow(profile.id);
+      const parsedIsFollowing = data?.is_following === true
+        || data?.is_following === 'true'
+        || data?.is_following === 't'
+        || data?.is_following === 1
+        || data?.is_following === '1';
+
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const previousFollowing = Boolean(prev.is_following);
+        const nextFollowing = parsedIsFollowing;
+        const baseFollowers = Number(prev.followers_count) || 0;
+        const followersCount = previousFollowing === nextFollowing
+          ? baseFollowers
+          : Math.max(0, baseFollowers + (nextFollowing ? 1 : -1));
+
+        return {
+          ...prev,
+          is_following: nextFollowing,
+          followers_count: followersCount,
+        };
+      });
+      const profileData = await getProfileSummary(username);
+      setProfile(profileData.profile);
+    } catch (error) {
+      showToast(error.message || 'No se pudo actualizar el seguimiento', 'error');
+    } finally {
+      setFollowLoading(false);
+    }
   }
 
   async function handleConfirmDelete() {
@@ -81,16 +111,25 @@ function ProfilePage() {
             <span>{profile?.following_count || 0} siguiendo</span>
             <span>{profile?.notes_count || 0} notas</span>
           </div>
-          {!isOwnProfile && <button onClick={handleFollowToggle}>{profile?.is_following ? 'Dejar de seguir' : 'Seguir'}</button>}
+          {!isOwnProfile && (
+            <button
+              type="button"
+              className={`${styles.followButton} ${profile?.is_following ? styles.followButtonFollowing : ''}`}
+              onClick={handleFollowToggle}
+              disabled={followLoading}
+            >
+              {followLoading ? 'Procesando...' : (profile?.is_following ? 'Dejar de seguir' : 'Seguir')}
+            </button>
+          )}
         </div>
       </div>
 
       {isOwnProfile ? <EditProfileForm /> : null}
 
       <div className={styles.tabs}>
-        <button onClick={() => setTab('notes')}>Notas</button>
-        <button onClick={() => setTab('replies')}>Respuestas</button>
-        <button onClick={() => setTab('likes')}>Likes</button>
+        <button type="button" className={`${styles.tabButton} ${tab === 'notes' ? styles.tabButtonActive : ''}`} onClick={() => setTab('notes')}>Notas</button>
+        <button type="button" className={`${styles.tabButton} ${tab === 'replies' ? styles.tabButtonActive : ''}`} onClick={() => setTab('replies')}>Respuestas</button>
+        <button type="button" className={`${styles.tabButton} ${tab === 'likes' ? styles.tabButtonActive : ''}`} onClick={() => setTab('likes')}>Likes</button>
       </div>
 
       {tab === 'notes' ? <NotesList notes={notes} onDelete={(id) => { setSelectedNoteId(id); setConfirmOpen(true); }} deletingId={deletingId} onUpdate={(u) => setNotes((prev) => prev.map((n) => n.id === u.id ? u : n))} /> : null}
