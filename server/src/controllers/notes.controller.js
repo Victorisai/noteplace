@@ -2,50 +2,36 @@ const {
   createNote,
   getFeedNotes,
   getNotesByUsername,
+  getProfileByUsername,
+  getUserReplies,
+  getUserLikedNotes,
   updateNote,
   deleteNote,
   toggleLike,
+  toggleBookmark,
   getCommentsByNoteId,
   createComment,
 } = require('../services/notes.service');
 
 async function create(req, res) {
   try {
-    const { content } = req.body;
-
-    const note = await createNote({
-      content,
-      userId: req.user.id,
-    });
-
-    return res.status(201).json({
-      message: 'Nota creada correctamente',
-      note,
-    });
+    const { content = '' } = req.body;
+    const imageUrls = (req.files || []).map((file) => `/uploads/notes/${file.filename}`);
+    const note = await createNote({ content, userId: req.user.id, imageUrls });
+    return res.status(201).json({ message: 'Nota creada correctamente', note });
   } catch (error) {
-    return res.status(400).json({
-      message: error.message || 'Error al crear nota',
-    });
+    return res.status(400).json({ message: error.message || 'Error al crear nota' });
   }
 }
 
 async function getFeed(req, res) {
   try {
-    const { page = 1, limit = 10, q = '' } = req.query;
+    const { cursor = null, limit = 10, q = '' } = req.query;
     const userId = req.user?.id || null;
-
-    const data = await getFeedNotes({
-      page,
-      limit,
-      query: q,
-      userId,
-    });
-
+    const data = await getFeedNotes({ cursor, limit, query: q, userId });
     return res.status(200).json(data);
   } catch (error) {
-    return res.status(500).json({
-      message: error.message || 'Error al obtener el feed',
-    });
+    return res.status(500).json({ message: error.message || 'Error al obtener el feed' });
   }
 }
 
@@ -53,105 +39,91 @@ async function getByUsername(req, res) {
   try {
     const { username } = req.params;
     const viewerUserId = req.user?.id || null;
-
     const data = await getNotesByUsername(username, viewerUserId);
-
     return res.status(200).json(data);
   } catch (error) {
-    return res.status(404).json({
-      message: error.message || 'Error al obtener notas del usuario',
-    });
+    return res.status(404).json({ message: error.message || 'Error al obtener notas del usuario' });
+  }
+}
+
+async function getProfile(req, res) {
+  try {
+    const profile = await getProfileByUsername(req.params.username, req.user?.id || null);
+    return res.status(200).json({ profile });
+  } catch (error) {
+    return res.status(404).json({ message: error.message || 'Error al obtener perfil' });
+  }
+}
+
+async function getUserRepliesController(req, res) {
+  try {
+    const replies = await getUserReplies(req.params.username);
+    return res.status(200).json({ replies });
+  } catch (error) {
+    return res.status(400).json({ message: error.message || 'Error al obtener respuestas' });
+  }
+}
+
+async function getUserLikesController(req, res) {
+  try {
+    const notes = await getUserLikedNotes(req.params.username, req.user?.id || null);
+    return res.status(200).json({ notes });
+  } catch (error) {
+    return res.status(400).json({ message: error.message || 'Error al obtener likes' });
   }
 }
 
 async function edit(req, res) {
   try {
-    const { id } = req.params;
-    const { content } = req.body;
-
-    const note = await updateNote({
-      noteId: Number(id),
-      userId: req.user.id,
-      content,
-    });
-
-    return res.status(200).json({
-      message: 'Nota actualizada correctamente',
-      note,
-    });
+    const note = await updateNote({ noteId: Number(req.params.id), userId: req.user.id, content: req.body.content });
+    return res.status(200).json({ message: 'Nota actualizada correctamente', note });
   } catch (error) {
-    return res.status(400).json({
-      message: error.message || 'Error al editar nota',
-    });
+    return res.status(400).json({ message: error.message || 'Error al editar nota' });
   }
 }
 
 async function remove(req, res) {
   try {
-    const { id } = req.params;
-
-    const result = await deleteNote({
-      noteId: Number(id),
-      userId: req.user.id,
-    });
-
+    const result = await deleteNote({ noteId: Number(req.params.id), userId: req.user.id });
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({
-      message: error.message || 'Error al eliminar nota',
-    });
+    return res.status(400).json({ message: error.message || 'Error al eliminar nota' });
   }
 }
 
 async function like(req, res) {
   try {
-    const { id } = req.params;
-
-    const result = await toggleLike({
-      noteId: Number(id),
-      userId: req.user.id,
-    });
-
+    const result = await toggleLike({ noteId: Number(req.params.id), userId: req.user.id });
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({
-      message: error.message || 'Error al procesar like',
-    });
+    return res.status(400).json({ message: error.message || 'Error al procesar like' });
+  }
+}
+
+async function bookmark(req, res) {
+  try {
+    const result = await toggleBookmark({ noteId: Number(req.params.id), userId: req.user.id });
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(400).json({ message: error.message || 'Error al procesar favorito' });
   }
 }
 
 async function getComments(req, res) {
   try {
-    const { id } = req.params;
-    const comments = await getCommentsByNoteId(Number(id));
-
+    const comments = await getCommentsByNoteId(Number(req.params.id));
     return res.status(200).json({ comments });
   } catch (error) {
-    return res.status(404).json({
-      message: error.message || 'Error al obtener comentarios',
-    });
+    return res.status(404).json({ message: error.message || 'Error al obtener comentarios' });
   }
 }
 
 async function comment(req, res) {
   try {
-    const { id } = req.params;
-    const { content } = req.body;
-
-    const comment = await createComment({
-      noteId: Number(id),
-      userId: req.user.id,
-      content,
-    });
-
-    return res.status(201).json({
-      message: 'Comentario agregado correctamente',
-      comment,
-    });
+    const commentData = await createComment({ noteId: Number(req.params.id), userId: req.user.id, content: req.body.content });
+    return res.status(201).json({ message: 'Comentario agregado correctamente', comment: commentData });
   } catch (error) {
-    return res.status(400).json({
-      message: error.message || 'Error al comentar',
-    });
+    return res.status(400).json({ message: error.message || 'Error al comentar' });
   }
 }
 
@@ -159,9 +131,13 @@ module.exports = {
   create,
   getFeed,
   getByUsername,
+  getProfile,
+  getUserRepliesController,
+  getUserLikesController,
   edit,
   remove,
   like,
+  bookmark,
   getComments,
   comment,
 };

@@ -24,3 +24,13 @@ export async function updateMyProfile(payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export async function uploadMyAvatar(file) {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  return apiRequest('/auth/me/avatar', {
+    method: 'POST',
+    body: formData,
+  });
+}
