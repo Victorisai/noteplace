@@ -5,22 +5,18 @@ const MAX_CHARS = 280;
 
 function NoteComposer({ onSubmit, loading }) {
   const [content, setContent] = useState('');
-
+  const [images, setImages] = useState([]);
   const remainingChars = useMemo(() => MAX_CHARS - content.length, [content]);
 
   async function handleSubmit(event) {
     event.preventDefault();
-
     const trimmed = content.trim();
+    if (!trimmed || trimmed.length > MAX_CHARS) return;
 
-    if (!trimmed || trimmed.length > MAX_CHARS) {
-      return;
-    }
-
-    const wasCreated = await onSubmit(trimmed);
-
+    const wasCreated = await onSubmit(trimmed, images);
     if (wasCreated) {
       setContent('');
+      setImages([]);
     }
   }
 
@@ -34,20 +30,19 @@ function NoteComposer({ onSubmit, loading }) {
         maxLength={MAX_CHARS}
       />
 
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={(event) => setImages(Array.from(event.target.files || []).slice(0, 4))}
+      />
+
       <div className={styles.footer}>
-        <span
-          className={`${styles.counter} ${
-            remainingChars <= 20 ? styles.counterWarning : ''
-          }`}
-        >
+        <span className={`${styles.counter} ${remainingChars <= 20 ? styles.counterWarning : ''}`}>
           {remainingChars} caracteres restantes
         </span>
 
-        <button
-          className={styles.button}
-          type="submit"
-          disabled={loading || !content.trim()}
-        >
+        <button className={styles.button} type="submit" disabled={loading || !content.trim()}>
           {loading ? 'Publicando...' : 'Publicar'}
         </button>
       </div>

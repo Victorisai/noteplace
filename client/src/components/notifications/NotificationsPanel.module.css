@@ -1,0 +1,6 @@
+.panel { background: var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px; }
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.list { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.item { padding:8px; background:var(--surface-2); border-radius:8px; }
+.read { opacity:.7; }
+.state { color:var(--text-muted); }

@@ -1,27 +1,39 @@
 const jwt = require('jsonwebtoken');
 
-function protect(req, res, next) {
+function extractToken(req) {
   const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  return authHeader.split(' ')[1];
+}
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      message: 'No autorizado, token no proporcionado',
-    });
+function protect(req, res, next) {
+  const token = extractToken(req);
+  if (!token) {
+    return res.status(401).json({ message: 'No autorizado, token no proporcionado' });
   }
 
-  const token = authHeader.split(' ')[1];
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
-  } catch (error) {
-    return res.status(401).json({
-      message: 'Token inválido o expirado',
-    });
+  } catch (_error) {
+    return res.status(401).json({ message: 'Token inválido o expirado' });
   }
 }
 
-module.exports = {
-  protect,
-};
+function optionalAuth(req, _res, next) {
+  const token = extractToken(req);
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (_error) {
+    req.user = null;
+  }
+
+  next();
+}
+
+module.exports = { protect, optionalAuth };

@@ -8,26 +8,17 @@ async function registerUser({ name, username, email, password }) {
   const trimmedName = name.trim();
 
   const existingUser = await pool.query(
-    `SELECT id, email, username
-     FROM users
-     WHERE email = $1 OR username = $2`,
+    `SELECT id, email, username FROM users WHERE email = $1 OR username = $2`,
     [normalizedEmail, normalizedUsername]
   );
 
   if (existingUser.rows.length > 0) {
     const matched = existingUser.rows[0];
-
-    if (matched.email === normalizedEmail) {
-      throw new Error('El correo ya está registrado');
-    }
-
-    if (matched.username === normalizedUsername) {
-      throw new Error('El username ya está en uso');
-    }
+    if (matched.email === normalizedEmail) throw new Error('El correo ya está registrado');
+    if (matched.username === normalizedUsername) throw new Error('El username ya está en uso');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-
   const result = await pool.query(
     `INSERT INTO users (name, username, email, password)
      VALUES ($1, $2, $3, $4)
@@ -36,48 +27,25 @@ async function registerUser({ name, username, email, password }) {
   );
 
   const user = result.rows[0];
-
-  const token = generateToken({
-    id: user.id,
-    username: user.username,
-    email: user.email,
-  });
-
-  return {
-    user,
-    token,
-  };
+  const token = generateToken({ id: user.id, username: user.username, email: user.email });
+  return { user, token };
 }
 
 async function loginUser({ emailOrUsername, password }) {
   const value = emailOrUsername.trim().toLowerCase();
-
   const result = await pool.query(
     `SELECT id, name, username, email, password, bio, avatar_url, created_at
-     FROM users
-     WHERE email = $1 OR username = $1
-     LIMIT 1`,
+     FROM users WHERE email = $1 OR username = $1 LIMIT 1`,
     [value]
   );
 
-  if (result.rows.length === 0) {
-    throw new Error('Credenciales inválidas');
-  }
-
+  if (!result.rows.length) throw new Error('Credenciales inválidas');
   const user = result.rows[0];
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) throw new Error('Credenciales inválidas');
 
-  if (!isPasswordValid) {
-    throw new Error('Credenciales inválidas');
-  }
-
-  const token = generateToken({
-    id: user.id,
-    username: user.username,
-    email: user.email,
-  });
-
+  const token = generateToken({ id: user.id, username: user.username, email: user.email });
   return {
     user: {
       id: user.id,
@@ -95,62 +63,46 @@ async function loginUser({ emailOrUsername, password }) {
 async function getCurrentUser(userId) {
   const result = await pool.query(
     `SELECT id, name, username, email, bio, avatar_url, created_at
-     FROM users
-     WHERE id = $1
-     LIMIT 1`,
+     FROM users WHERE id = $1 LIMIT 1`,
     [userId]
   );
-
-  if (result.rows.length === 0) {
-    throw new Error('Usuario no encontrado');
-  }
-
+  if (!result.rows.length) throw new Error('Usuario no encontrado');
   return result.rows[0];
 }
 
-async function updateUserProfile(userId, { name, username, bio, avatar_url }) {
+async function updateUserProfile(userId, { name, username, bio }) {
   const trimmedName = name.trim();
   const normalizedUsername = username.trim().toLowerCase();
   const trimmedBio = bio.trim();
-  const trimmedAvatar = avatar_url.trim();
 
-  if (!trimmedName || !normalizedUsername) {
-    throw new Error('Nombre y username son obligatorios');
-  }
+  if (!trimmedName || !normalizedUsername) throw new Error('Nombre y username son obligatorios');
 
   const existingUser = await pool.query(
-    `SELECT id, username
-     FROM users
-     WHERE username = $1 AND id != $2
-     LIMIT 1`,
+    `SELECT id FROM users WHERE username = $1 AND id != $2 LIMIT 1`,
     [normalizedUsername, userId]
   );
-
-  if (existingUser.rows.length > 0) {
-    throw new Error('El username ya está en uso');
-  }
+  if (existingUser.rows.length > 0) throw new Error('El username ya está en uso');
 
   const result = await pool.query(
-    `UPDATE users
-     SET name = $1,
-         username = $2,
-         bio = $3,
-         avatar_url = $4
-     WHERE id = $5
+    `UPDATE users SET name = $1, username = $2, bio = $3
+     WHERE id = $4
      RETURNING id, name, username, email, bio, avatar_url, created_at`,
-    [trimmedName, normalizedUsername, trimmedBio, trimmedAvatar, userId]
+    [trimmedName, normalizedUsername, trimmedBio, userId]
   );
 
-  if (result.rows.length === 0) {
-    throw new Error('Usuario no encontrado');
-  }
-
+  if (!result.rows.length) throw new Error('Usuario no encontrado');
   return result.rows[0];
 }
 
-module.exports = {
-  registerUser,
-  loginUser,
-  getCurrentUser,
-  updateUserProfile,
-};
+async function updateAvatar(userId, avatarUrl) {
+  const result = await pool.query(
+    `UPDATE users SET avatar_url = $1 WHERE id = $2
+     RETURNING id, name, username, email, bio, avatar_url, created_at`,
+    [avatarUrl, userId]
+  );
+
+  if (!result.rows.length) throw new Error('Usuario no encontrado');
+  return result.rows[0];
+}
+
+module.exports = { registerUser, loginUser, getCurrentUser, updateUserProfile, updateAvatar };
