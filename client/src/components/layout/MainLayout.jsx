@@ -47,23 +47,27 @@ function MainLayout() {
           </div>
 
           <nav className={styles.nav}>
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                isActive ? `${styles.link} ${styles.active}` : styles.link
-              }
-            >
-              Inicio
-            </NavLink>
+            {!isAuthenticated ? (
+              <NavLink
+                to="/"
+                className={({ isActive }) =>
+                  isActive ? `${styles.link} ${styles.active}` : styles.link
+                }
+              >
+                Inicio
+              </NavLink>
+            ) : null}
 
-            <NavLink
-              to="/feed"
-              className={({ isActive }) =>
-                isActive ? `${styles.link} ${styles.active}` : styles.link
-              }
-            >
-              Feed
-            </NavLink>
+            {isAuthenticated ? (
+              <NavLink
+                to="/feed"
+                className={({ isActive }) =>
+                  isActive ? `${styles.link} ${styles.active}` : styles.link
+                }
+              >
+                Feed
+              </NavLink>
+            ) : null}
 
             {isAuthenticated ? (
               <>

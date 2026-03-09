@@ -225,7 +225,12 @@ async function toggleLike({ noteId, userId }) {
   } else {
     await pool.query(`INSERT INTO note_likes (note_id, user_id) VALUES ($1, $2)`, [noteId, userId]);
     liked = true;
-    await createNotification({ recipientId: noteOwnerId, actorId: userId, type: NOTIFICATION_TYPES.LIKE, noteId });
+    try {
+      await createNotification({ recipientId: noteOwnerId, actorId: userId, type: NOTIFICATION_TYPES.LIKE, noteId });
+    } catch (error) {
+      // Notification failures should not break a successful like action.
+      console.error('Failed to create like notification:', error);
+    }
   }
 
   const countResult = await pool.query(`SELECT COUNT(*) AS total FROM note_likes WHERE note_id = $1`, [noteId]);
@@ -279,13 +284,18 @@ async function createComment({ noteId, userId, content }) {
   const comment = result.rows[0];
   const userResult = await pool.query(`SELECT id, name, username, avatar_url FROM users WHERE id = $1 LIMIT 1`, [userId]);
 
-  await createNotification({
-    recipientId: noteCheck.rows[0].user_id,
-    actorId: userId,
-    type: NOTIFICATION_TYPES.COMMENT,
-    noteId,
-    commentId: comment.id,
-  });
+  try {
+    await createNotification({
+      recipientId: noteCheck.rows[0].user_id,
+      actorId: userId,
+      type: NOTIFICATION_TYPES.COMMENT,
+      noteId,
+      commentId: comment.id,
+    });
+  } catch (error) {
+    // Notification failures should not break a successful comment action.
+    console.error('Failed to create comment notification:', error);
+  }
 
   return { ...comment, user: userResult.rows[0] };
 }
