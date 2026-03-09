@@ -1,9 +1,20 @@
 const API_URL = import.meta.env.VITE_API_URL;
+const API_ORIGIN = (() => {
+  if (!API_URL) return '';
+  try {
+    return new URL(API_URL).origin;
+  } catch {
+    return '';
+  }
+})();
 
 export function toAbsoluteAssetUrl(path) {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  return `${API_URL}${path}`;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  if (API_ORIGIN) return `${API_ORIGIN}${normalizedPath}`;
+  if (API_URL) return `${API_URL}${normalizedPath}`;
+  return normalizedPath;
 }
 
 async function apiRequest(endpoint, options = {}) {
@@ -24,7 +35,7 @@ async function apiRequest(endpoint, options = {}) {
   let data = null;
   try {
     data = await response.json();
-  } catch (_error) {
+  } catch {
     data = null;
   }
 

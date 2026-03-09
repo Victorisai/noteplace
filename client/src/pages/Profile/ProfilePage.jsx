@@ -54,11 +54,17 @@ function ProfilePage() {
   }
 
   async function handleConfirmDelete() {
-    await deleteNote(selectedNoteId);
-    setNotes((prev) => prev.filter((note) => note.id !== selectedNoteId));
-    setConfirmOpen(false);
-    setSelectedNoteId(null);
-    setDeletingId(null);
+    if (!selectedNoteId) return;
+
+    try {
+      setDeletingId(selectedNoteId);
+      await deleteNote(selectedNoteId);
+      setNotes((prev) => prev.filter((note) => note.id !== selectedNoteId));
+      setConfirmOpen(false);
+      setSelectedNoteId(null);
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   if (loading) return <PageLoader text="Cargando perfil..." />;
@@ -87,11 +93,11 @@ function ProfilePage() {
         <button onClick={() => setTab('likes')}>Likes</button>
       </div>
 
-      {tab === 'notes' ? <NotesList notes={notes} onDelete={(id) => { setSelectedNoteId(id); setDeletingId(id); setConfirmOpen(true); }} deletingId={deletingId} onUpdate={(u) => setNotes((prev) => prev.map((n) => n.id === u.id ? u : n))} /> : null}
+      {tab === 'notes' ? <NotesList notes={notes} onDelete={(id) => { setSelectedNoteId(id); setConfirmOpen(true); }} deletingId={deletingId} onUpdate={(u) => setNotes((prev) => prev.map((n) => n.id === u.id ? u : n))} /> : null}
       {tab === 'replies' ? <ul>{replies.map((r) => <li key={r.id}>{r.content}</li>)}</ul> : null}
       {tab === 'likes' ? <NotesList notes={likes} onDelete={() => {}} onUpdate={() => {}} /> : null}
 
-      <ConfirmModal isOpen={confirmOpen} title="Eliminar nota" description="Esta acción no se puede deshacer." confirmText="Eliminar" cancelText="Cancelar" onConfirm={handleConfirmDelete} onCancel={() => setConfirmOpen(false)} loading={Boolean(deletingId)} />
+      <ConfirmModal isOpen={confirmOpen} title="Eliminar nota" description="Esta acción no se puede deshacer." confirmText="Eliminar" cancelText="Cancelar" onConfirm={handleConfirmDelete} onCancel={() => { setConfirmOpen(false); setSelectedNoteId(null); }} loading={Boolean(deletingId)} />
     </section>
   );
 }
