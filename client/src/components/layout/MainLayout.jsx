@@ -38,13 +38,15 @@ function MainLayout() {
     <div className={styles.app}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link to="/" className={styles.brand}>
+          <Link to={isAuthenticated ? '/feed' : '/'} className={styles.brand}>
             <Logo />
           </Link>
 
-          <div className={styles.searchDesktop}>
-            <SearchPanel />
-          </div>
+          {isAuthenticated ? (
+            <div className={styles.searchDesktop}>
+              <SearchPanel />
+            </div>
+          ) : null}
 
           <nav className={styles.nav}>
             {!isAuthenticated ? (

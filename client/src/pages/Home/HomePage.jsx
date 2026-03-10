@@ -1,9 +1,15 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
+import { useAuth } from '../../context/AuthContext';
+import PageLoader from '../../components/common/PageLoader';
 import styles from './HomePage.module.css';
 
 function HomePage() {
+  const { isAuthenticated, authLoading } = useAuth();
   useDocumentTitle('NotePlace | Comparte tus ideas');
+
+  if (authLoading) return <PageLoader text="Cargando..." />;
+  if (isAuthenticated) return <Navigate to="/feed" replace />;
 
   return (
     <section className={styles.hero}>
