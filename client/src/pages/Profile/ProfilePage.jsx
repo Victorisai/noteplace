@@ -34,6 +34,7 @@ function ProfilePage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [followLoading, setFollowLoading] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
 
   const isOwnProfile = user?.username === profile?.username;
 
@@ -134,7 +135,38 @@ function ProfilePage() {
         </div>
       </div>
 
-      {isOwnProfile ? <EditProfileForm /> : null}
+      {isOwnProfile ? (
+        <section className={styles.profileDetailsCard}>
+          {!editingProfile ? (
+            <>
+              <div className={styles.profileDetailsHeader}>
+                <h2>Información del perfil</h2>
+                <button type="button" className={styles.editProfileButton} onClick={() => setEditingProfile(true)}>Editar perfil</button>
+              </div>
+              <div className={styles.profileDetailsGrid}>
+                <div><span className={styles.detailLabel}>Nombre</span><p>{profile?.name || 'Sin nombre'}</p></div>
+                <div><span className={styles.detailLabel}>Usuario</span><p>@{profile?.username}</p></div>
+                <div className={styles.detailFull}><span className={styles.detailLabel}>Biografía</span><p>{profile?.bio || 'Aún no agregaste una biografía.'}</p></div>
+              </div>
+            </>
+          ) : (
+            <EditProfileForm
+              showTitle={false}
+              onCancel={() => setEditingProfile(false)}
+              onSaved={(updatedUser) => {
+                setProfile((prev) => (prev ? {
+                  ...prev,
+                  name: updatedUser?.name ?? prev.name,
+                  username: updatedUser?.username ?? prev.username,
+                  bio: updatedUser?.bio ?? prev.bio,
+                  avatar_url: updatedUser?.avatar_url ?? prev.avatar_url,
+                } : prev));
+                setEditingProfile(false);
+              }}
+            />
+          )}
+        </section>
+      ) : null}
 
       <div className={styles.tabs}>
         <button type="button" className={`${styles.tabButton} ${tab === 'notes' ? styles.tabButtonActive : ''}`} onClick={() => setTab('notes')}>Notas</button>

@@ -158,8 +158,76 @@
   border-color: var(--color-primary);
 }
 
+.profileDetailsCard {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.profileDetailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.profileDetailsHeader h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.editProfileButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profileDetailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.profileDetailsGrid p {
+  margin: 0.3rem 0 0;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.detailLabel {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.detailFull {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 640px) {
   .followButton {
     width: 100%;
+  }
+
+  .profileDetailsHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .editProfileButton {
+    width: 100%;
+  }
+
+  .profileDetailsGrid {
+    grid-template-columns: 1fr;
   }
 }
