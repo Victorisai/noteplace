@@ -9,6 +9,9 @@ function FollowListModal({
   users = [],
   loading = false,
   emptyMessage = 'No hay usuarios para mostrar.',
+  actionLabel = '',
+  actionLoadingId = null,
+  onAction,
   onClose,
 }) {
   useEffect(() => {
@@ -39,13 +42,26 @@ function FollowListModal({
           <ul className={styles.list}>
             {users.map((item) => (
               <li key={item.id}>
-                <Link to={`/profile/${item.username}`} className={styles.userRow} onClick={onClose}>
-                  <Avatar name={item.name} avatarUrl={item.avatar_url} size="sm" />
-                  <div className={styles.userInfo}>
-                    <p className={styles.name}>{item.name}</p>
-                    <p className={styles.username}>@{item.username}</p>
-                  </div>
-                </Link>
+                <div className={styles.userRow}>
+                  <Link to={`/profile/${item.username}`} className={styles.userMain} onClick={onClose}>
+                    <Avatar name={item.name} avatarUrl={item.avatar_url} size="sm" />
+                    <div className={styles.userInfo}>
+                      <p className={styles.name}>{item.name}</p>
+                      <p className={styles.username}>@{item.username}</p>
+                    </div>
+                  </Link>
+
+                  {onAction ? (
+                    <button
+                      type="button"
+                      className={styles.actionButton}
+                      disabled={actionLoadingId === item.id}
+                      onClick={() => onAction(item)}
+                    >
+                      {actionLoadingId === item.id ? 'Procesando...' : actionLabel}
+                    </button>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>

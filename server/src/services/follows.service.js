@@ -79,4 +79,22 @@ async function getFollowingByUsername(username) {
   return result.rows;
 }
 
-module.exports = { toggleFollow, getFollowersByUsername, getFollowingByUsername };
+async function removeFollower({ userId, followerId }) {
+  if (!userId || !followerId) throw new Error('Datos inválidos');
+  if (userId === followerId) throw new Error('No puedes eliminarte a ti mismo');
+
+  const result = await pool.query(
+    `DELETE FROM follows
+     WHERE follower_id = $1 AND following_id = $2
+     RETURNING id`,
+    [followerId, userId]
+  );
+
+  if (!result.rows.length) {
+    throw new Error('El usuario no te sigue');
+  }
+
+  return { removed: true };
+}
+
+module.exports = { toggleFollow, getFollowersByUsername, getFollowingByUsername, removeFollower };

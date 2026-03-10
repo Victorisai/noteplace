@@ -4,6 +4,10 @@ export function toggleFollow(userId) {
   return apiRequest(`/follows/${userId}/toggle`, { method: 'POST' });
 }
 
+export function removeFollower(userId) {
+  return apiRequest(`/follows/${userId}/follower`, { method: 'DELETE' });
+}
+
 export function getFollowersByUsername(username) {
   return apiRequest(`/follows/user/${username}/followers`);
 }

@@ -10,7 +10,12 @@ import {
   getProfileSummary,
   getRepliesByUsername,
 } from '../../services/noteService';
-import { getFollowersByUsername, getFollowingByUsername, toggleFollow } from '../../services/followService';
+import {
+  getFollowersByUsername,
+  getFollowingByUsername,
+  removeFollower,
+  toggleFollow,
+} from '../../services/followService';
 import { useAuth } from '../../context/AuthContext';
 import useToast from '../../hooks/useToast';
 import EditProfileForm from '../../components/profile/EditProfileForm';
@@ -40,6 +45,7 @@ function ProfilePage() {
   const [followListType, setFollowListType] = useState('followers');
   const [followUsers, setFollowUsers] = useState([]);
   const [followUsersLoading, setFollowUsersLoading] = useState(false);
+  const [followActionLoadingId, setFollowActionLoadingId] = useState(null);
 
   const isOwnProfile = user?.username === profile?.username;
 
@@ -132,6 +138,46 @@ function ProfilePage() {
     }
   }
 
+  async function handleFollowListAction(targetUser) {
+    if (!isOwnProfile || !targetUser?.id) return;
+
+    try {
+      setFollowActionLoadingId(targetUser.id);
+
+      if (followListType === 'followers') {
+        await removeFollower(targetUser.id);
+        setFollowUsers((prev) => prev.filter((userItem) => userItem.id !== targetUser.id));
+        setProfile((prev) => (prev ? {
+          ...prev,
+          followers_count: Math.max(0, (Number(prev.followers_count) || 0) - 1),
+        } : prev));
+        showToast('Seguidor eliminado correctamente', 'success');
+        return;
+      }
+
+      const data = await toggleFollow(targetUser.id);
+      const parsedIsFollowing = data?.is_following === true
+        || data?.is_following === 'true'
+        || data?.is_following === 't'
+        || data?.is_following === 1
+        || data?.is_following === '1';
+
+      if (!parsedIsFollowing) {
+        setFollowUsers((prev) => prev.filter((userItem) => userItem.id !== targetUser.id));
+        setProfile((prev) => (prev ? {
+          ...prev,
+          following_count: Math.max(0, (Number(prev.following_count) || 0) - 1),
+        } : prev));
+      }
+
+      showToast('Dejaste de seguir a este usuario', 'success');
+    } catch (error) {
+      showToast(error.message || 'No se pudo completar la acción', 'error');
+    } finally {
+      setFollowActionLoadingId(null);
+    }
+  }
+
   if (loading) return <PageLoader text="Cargando perfil..." />;
 
   return (
@@ -214,8 +260,14 @@ function ProfilePage() {
         title={followListType === 'followers' ? `Seguidores de @${profile?.username}` : `Siguiendo de @${profile?.username}`}
         users={followUsers}
         loading={followUsersLoading}
+        actionLabel={followListType === 'followers' ? 'Eliminar seguido' : 'Dejar de seguir'}
+        actionLoadingId={followActionLoadingId}
+        onAction={isOwnProfile ? handleFollowListAction : null}
         emptyMessage={followListType === 'followers' ? 'Este perfil aún no tiene seguidores.' : 'Este perfil aún no sigue a nadie.'}
-        onClose={() => setFollowListOpen(false)}
+        onClose={() => {
+          setFollowListOpen(false);
+          setFollowActionLoadingId(null);
+        }}
       />
     </section>
   );

@@ -1,4 +1,9 @@
-const { toggleFollow, getFollowersByUsername, getFollowingByUsername } = require('../services/follows.service');
+const {
+  toggleFollow,
+  getFollowersByUsername,
+  getFollowingByUsername,
+  removeFollower,
+} = require('../services/follows.service');
 
 async function toggle(req, res) {
   try {
@@ -31,4 +36,16 @@ async function listFollowing(req, res) {
   }
 }
 
-module.exports = { toggle, listFollowers, listFollowing };
+async function removeFollowerController(req, res) {
+  try {
+    const data = await removeFollower({
+      userId: req.user.id,
+      followerId: Number(req.params.userId),
+    });
+    return res.status(200).json(data);
+  } catch (error) {
+    return res.status(400).json({ message: error.message || 'Error al eliminar seguidor' });
+  }
+}
+
+module.exports = { toggle, listFollowers, listFollowing, removeFollowerController };
