@@ -33,6 +33,11 @@ function SearchPanel() {
     runSearch();
   }, [debouncedQuery]);
 
+  function handleSelectResult() {
+    setQuery('');
+    setResults({ users: [], notes: [] });
+  }
+
   return (
     <div className={styles.panel}>
       <input
@@ -60,6 +65,7 @@ function SearchPanel() {
                     key={`user-${user.id}`}
                     to={`/profile/${user.username}`}
                     className={styles.resultItem}
+                    onClick={handleSelectResult}
                   >
                     <Avatar
                       name={user.name}
@@ -85,6 +91,7 @@ function SearchPanel() {
                     key={`note-${note.id}`}
                     to={`/profile/${note.user.username}`}
                     className={styles.resultItem}
+                    onClick={handleSelectResult}
                   >
                     <Avatar
                       name={note.user.name}
