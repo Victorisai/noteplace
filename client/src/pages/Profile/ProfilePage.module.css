@@ -64,6 +64,23 @@
   font-size: 0.92rem;
 }
 
+.statButton {
+  border: 0;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  padding: 0.6rem 0.85rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.statButton:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
 .notesSection {
   display: grid;
   gap: 1rem;

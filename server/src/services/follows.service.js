@@ -49,4 +49,34 @@ async function toggleFollow({ followerId, followingId }) {
   return { is_following: isFollowing };
 }
 
-module.exports = { toggleFollow };
+async function getFollowersByUsername(username) {
+  const normalizedUsername = username.trim().toLowerCase();
+  const result = await pool.query(
+    `SELECT u.id, u.name, u.username, u.avatar_url
+     FROM follows f
+     INNER JOIN users target ON target.id = f.following_id
+     INNER JOIN users u ON u.id = f.follower_id
+     WHERE target.username = $1
+     ORDER BY f.created_at DESC`,
+    [normalizedUsername]
+  );
+
+  return result.rows;
+}
+
+async function getFollowingByUsername(username) {
+  const normalizedUsername = username.trim().toLowerCase();
+  const result = await pool.query(
+    `SELECT u.id, u.name, u.username, u.avatar_url
+     FROM follows f
+     INNER JOIN users source ON source.id = f.follower_id
+     INNER JOIN users u ON u.id = f.following_id
+     WHERE source.username = $1
+     ORDER BY f.created_at DESC`,
+    [normalizedUsername]
+  );
+
+  return result.rows;
+}
+
+module.exports = { toggleFollow, getFollowersByUsername, getFollowingByUsername };

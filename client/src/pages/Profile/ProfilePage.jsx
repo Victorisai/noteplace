@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import NotesList from '../../components/notes/NotesList';
+import FollowListModal from '../../components/profile/FollowListModal';
 import {
   deleteNote,
   getBookmarkedNotesByUsername,
@@ -9,7 +10,7 @@ import {
   getProfileSummary,
   getRepliesByUsername,
 } from '../../services/noteService';
-import { toggleFollow } from '../../services/followService';
+import { getFollowersByUsername, getFollowingByUsername, toggleFollow } from '../../services/followService';
 import { useAuth } from '../../context/AuthContext';
 import useToast from '../../hooks/useToast';
 import EditProfileForm from '../../components/profile/EditProfileForm';
@@ -35,6 +36,10 @@ function ProfilePage() {
   const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [followLoading, setFollowLoading] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
+  const [followListOpen, setFollowListOpen] = useState(false);
+  const [followListType, setFollowListType] = useState('followers');
+  const [followUsers, setFollowUsers] = useState([]);
+  const [followUsersLoading, setFollowUsersLoading] = useState(false);
 
   const isOwnProfile = user?.username === profile?.username;
 
@@ -108,6 +113,25 @@ function ProfilePage() {
     }
   }
 
+  async function handleOpenFollowList(type) {
+    try {
+      setFollowListType(type);
+      setFollowListOpen(true);
+      setFollowUsersLoading(true);
+
+      const data = type === 'followers'
+        ? await getFollowersByUsername(username)
+        : await getFollowingByUsername(username);
+
+      setFollowUsers(data.users || []);
+    } catch (error) {
+      showToast(error.message || 'No se pudo cargar la lista', 'error');
+      setFollowUsers([]);
+    } finally {
+      setFollowUsersLoading(false);
+    }
+  }
+
   if (loading) return <PageLoader text="Cargando perfil..." />;
 
   return (
@@ -118,8 +142,12 @@ function ProfilePage() {
           <h1 className={styles.name}>{profile?.name}</h1>
           <p className={styles.username}>@{profile?.username}</p>
           <div className={styles.stats}>
-            <span>{profile?.followers_count || 0} seguidores</span>
-            <span>{profile?.following_count || 0} siguiendo</span>
+            <button type="button" className={styles.statButton} onClick={() => handleOpenFollowList('followers')}>
+              {profile?.followers_count || 0} seguidores
+            </button>
+            <button type="button" className={styles.statButton} onClick={() => handleOpenFollowList('following')}>
+              {profile?.following_count || 0} siguiendo
+            </button>
             <span>{profile?.notes_count || 0} notas</span>
           </div>
           {!isOwnProfile && (
@@ -181,6 +209,14 @@ function ProfilePage() {
       {tab === 'bookmarks' ? <NotesList notes={bookmarks} onDelete={() => {}} onUpdate={() => {}} /> : null}
 
       <ConfirmModal isOpen={confirmOpen} title="Eliminar nota" description="Esta acción no se puede deshacer." confirmText="Eliminar" cancelText="Cancelar" onConfirm={handleConfirmDelete} onCancel={() => { setConfirmOpen(false); setSelectedNoteId(null); }} loading={Boolean(deletingId)} />
+      <FollowListModal
+        isOpen={followListOpen}
+        title={followListType === 'followers' ? `Seguidores de @${profile?.username}` : `Siguiendo de @${profile?.username}`}
+        users={followUsers}
+        loading={followUsersLoading}
+        emptyMessage={followListType === 'followers' ? 'Este perfil aún no tiene seguidores.' : 'Este perfil aún no sigue a nadie.'}
+        onClose={() => setFollowListOpen(false)}
+      />
     </section>
   );
 }
