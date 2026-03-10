@@ -7,6 +7,7 @@ const notesRoutes = require('./routes/notes.routes');
 const searchRoutes = require('./routes/search.routes');
 const followsRoutes = require('./routes/follows.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
+const messagesRoutes = require('./routes/messages.routes');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/notes', notesRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/follows', followsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/messages', messagesRoutes);
 
 app.use((error, _req, res, _next) => {
   if (error instanceof multer.MulterError || error.message?.includes('archivo')) {

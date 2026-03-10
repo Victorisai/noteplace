@@ -5,6 +5,7 @@ import HomePage from '../pages/Home/HomePage';
 import LoginPage from '../pages/Login/LoginPage';
 import RegisterPage from '../pages/Register/RegisterPage';
 import FeedPage from '../pages/Feed/FeedPage';
+import MessagesPage from '../pages/Messages/MessagesPage';
 import ProfilePage from '../pages/Profile/ProfilePage';
 import NotFoundPage from '../pages/NotFound/NotFoundPage';
 
@@ -21,6 +22,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <FeedPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'messages',
+        element: (
+          <ProtectedRoute>
+            <MessagesPage />
           </ProtectedRoute>
         ),
       },

@@ -43,6 +43,26 @@
   transition: 0.2s ease;
 }
 
+.messageLink {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+  transition: 0.2s ease;
+}
+
+.messageLink svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.messageLink:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
 .link:hover {
   background: var(--color-surface);
   color: var(--color-text);

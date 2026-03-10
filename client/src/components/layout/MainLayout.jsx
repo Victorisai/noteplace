@@ -74,6 +74,21 @@ function MainLayout() {
             {isAuthenticated ? (
               <>
                 <NavLink
+                  to="/messages"
+                  className={({ isActive }) =>
+                    isActive ? `${styles.messageLink} ${styles.active}` : styles.messageLink
+                  }
+                  aria-label="Mensajes"
+                  title="Mensajes"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 9.5H17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    <path d="M7 13.5H13.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    <path d="M7 20L4 21V6.5C4 5.12 5.12 4 6.5 4H17.5C18.88 4 20 5.12 20 6.5V15.5C20 16.88 18.88 18 17.5 18H9L7 20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </NavLink>
+
+                <NavLink
                   to={`/profile/${user.username}`}
                   className={({ isActive }) =>
                     isActive ? `${styles.link} ${styles.active}` : styles.link
