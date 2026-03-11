@@ -55,6 +55,8 @@
   display: flex;
   gap: 0.7rem;
   align-items: center;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .userButton:hover,
@@ -68,6 +70,10 @@
   background: var(--color-primary-soft);
 }
 
+.conversationItem {
+  min-height: 72px;
+}
+
 .conversationWrap {
   display: grid;
   gap: 0.6rem;
@@ -75,7 +81,8 @@
 }
 
 .conversationList {
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   max-height: 52vh;
   padding-right: 0.2rem;
 }
@@ -83,6 +90,9 @@
 .conversationInfo {
   min-width: 0;
   flex: 1;
+  overflow: hidden;
+  display: grid;
+  gap: 0.1rem;
 }
 
 .conversationHeader {
@@ -90,6 +100,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   align-items: center;
+  min-width: 0;
 }
 
 .nameWrap {
@@ -97,12 +108,18 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  flex: 1;
 }
 
-.conversationHeader span {
+.conversationTime {
   font-size: 0.73rem;
   color: var(--color-text-muted);
   font-weight: 600;
+  max-width: 95px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
 }
 
 .pinnedTag {
@@ -119,12 +136,17 @@
 }
 
 .lastMessage {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: 0.15rem 0 0;
   color: var(--color-text-muted);
   font-size: 0.86rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  word-break: break-word;
 }
 
 .unreadBadge {

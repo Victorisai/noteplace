@@ -84,7 +84,9 @@ function MessagesSidebar({
                         </span>
                       ) : null}
                     </div>
-                    <span>{conversation.last_message?.created_at ? formatConversationTime(conversation.last_message.created_at) : ''}</span>
+                    <span className={styles.conversationTime}>
+                      {conversation.last_message?.created_at ? formatConversationTime(conversation.last_message.created_at) : ''}
+                    </span>
                   </div>
                   <p className={styles.lastMessage}>
                     {conversation.last_message?.content || 'Inicia una conversación'}
