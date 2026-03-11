@@ -1,4 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import useToast from '../../hooks/useToast';
+import { useAuth } from '../../context/AuthContext';
+import {
+  deleteActiveConversation,
+  sendMessageFromComposer,
+  selectActiveConversation,
+  selectComposer,
+  selectIsDeletingActiveConversation,
+  selectIsPinningActiveConversation,
+  selectMessages,
+  selectMessagesLoading,
+  selectSending,
+  setActiveConversationId,
+  setComposer,
+  togglePinnedForActiveConversation,
+} from '../../features/messages/messagesSlice';
 import Avatar from '../ui/Avatar';
 import styles from './MessagesChatWindow.module.css';
 
@@ -9,22 +26,21 @@ function formatTime(dateString) {
   }).format(new Date(dateString));
 }
 
-function MessagesChatWindow({
-  activeConversation,
-  messages,
-  messagesLoading,
-  currentUserId,
-  composer,
-  sending,
-  isMobile,
-  onBack,
-  onComposerChange,
-  onSendMessage,
-  onTogglePinConversation,
-  onDeleteConversation,
-  isPinningConversation,
-  isDeletingConversation,
-}) {
+function MessagesChatWindow({ isMobile }) {
+  const dispatch = useDispatch();
+  const { showToast } = useToast();
+  const { user } = useAuth();
+
+  const activeConversation = useSelector(selectActiveConversation);
+  const messages = useSelector(selectMessages);
+  const messagesLoading = useSelector(selectMessagesLoading);
+  const composer = useSelector(selectComposer);
+  const sending = useSelector(selectSending);
+  const isPinningConversation = useSelector(selectIsPinningActiveConversation);
+  const isDeletingConversation = useSelector(selectIsDeletingActiveConversation);
+
+  const currentUserId = user?.id;
+
   const messagesRef = useRef(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -50,9 +66,40 @@ function MessagesChatWindow({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showDeleteModal, isDeletingConversation]);
 
+  async function handleSendMessage(event) {
+    event.preventDefault();
+
+    try {
+      await dispatch(sendMessageFromComposer());
+    } catch (error) {
+      showToast(error.message || 'No se pudo enviar el mensaje', 'error');
+    }
+  }
+
+  async function handleTogglePinConversation() {
+    try {
+      const nextPinnedState = await dispatch(togglePinnedForActiveConversation());
+      if (nextPinnedState === null) return;
+      showToast(nextPinnedState ? 'Chat fijado' : 'Chat desfijado', 'success');
+    } catch (error) {
+      showToast(error.message || 'No se pudo actualizar el chat', 'error');
+    }
+  }
+
   async function handleConfirmDelete() {
-    const deleted = await onDeleteConversation?.();
-    if (deleted) setShowDeleteModal(false);
+    try {
+      const deleted = await dispatch(deleteActiveConversation({ isMobile }));
+      if (!deleted) return;
+      setShowDeleteModal(false);
+      showToast('Chat borrado correctamente', 'success');
+    } catch (error) {
+      showToast(error.message || 'No se pudo borrar el chat', 'error');
+    }
+  }
+
+  function handleBack() {
+    if (!isMobile) return;
+    dispatch(setActiveConversationId(null));
   }
 
   return (
@@ -67,7 +114,7 @@ function MessagesChatWindow({
           <header className={styles.chatHeader}>
             <div className={styles.headerIdentity}>
               {isMobile ? (
-                <button type="button" className={styles.backButton} onClick={onBack} aria-label="Volver a chats">
+                <button type="button" className={styles.backButton} onClick={handleBack} aria-label="Volver a chats">
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M14.5 6.5L9 12L14.5 17.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -89,7 +136,7 @@ function MessagesChatWindow({
               <button
                 type="button"
                 className={`${styles.headerAction} ${activeConversation.is_pinned ? styles.headerActionPinned : ''}`}
-                onClick={onTogglePinConversation}
+                onClick={handleTogglePinConversation}
                 disabled={isPinningConversation || isDeletingConversation}
                 aria-label={activeConversation.is_pinned ? 'Desfijar chat' : 'Fijar chat'}
                 aria-pressed={Boolean(activeConversation.is_pinned)}
@@ -137,12 +184,12 @@ function MessagesChatWindow({
             })}
           </div>
 
-          <form className={styles.composer} onSubmit={onSendMessage}>
+          <form className={styles.composer} onSubmit={handleSendMessage}>
             <input
               type="text"
               placeholder="Escribe un mensaje..."
               value={composer}
-              onChange={(event) => onComposerChange(event.target.value)}
+              onChange={(event) => dispatch(setComposer(event.target.value))}
               maxLength={1200}
             />
             <button type="submit" disabled={sending || !composer.trim()}>

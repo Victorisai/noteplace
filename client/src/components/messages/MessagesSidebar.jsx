@@ -1,3 +1,18 @@
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import useDebounce from '../../hooks/useDebounce';
+import useToast from '../../hooks/useToast';
+import {
+  openConversationFromSearchUser,
+  runMessagesUserSearch,
+  selectConversation,
+  selectConversations,
+  selectSearch,
+  selectSearchingUsers,
+  selectSearchUsers,
+  setSearch,
+  selectActiveConversationId,
+} from '../../features/messages/messagesSlice';
 import Avatar from '../ui/Avatar';
 import styles from './MessagesSidebar.module.css';
 
@@ -8,16 +23,34 @@ function formatConversationTime(dateString) {
   }).format(new Date(dateString));
 }
 
-function MessagesSidebar({
-  search,
-  onSearchChange,
-  searchingUsers,
-  searchUsers,
-  onOpenConversation,
-  conversations,
-  activeConversationId,
-  onSelectConversation,
-}) {
+function MessagesSidebar() {
+  const dispatch = useDispatch();
+  const { showToast } = useToast();
+
+  const search = useSelector(selectSearch);
+  const searchingUsers = useSelector(selectSearchingUsers);
+  const searchUsers = useSelector(selectSearchUsers);
+  const conversations = useSelector(selectConversations);
+  const activeConversationId = useSelector(selectActiveConversationId);
+
+  const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => {
+    dispatch(runMessagesUserSearch(debouncedSearch));
+  }, [debouncedSearch, dispatch]);
+
+  async function handleOpenConversation(userId) {
+    try {
+      await dispatch(openConversationFromSearchUser(userId));
+    } catch (error) {
+      showToast(error.message || 'No se pudo abrir la conversación', 'error');
+    }
+  }
+
+  function handleSelectConversation(conversationId) {
+    dispatch(selectConversation(conversationId));
+  }
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.searchBox}>
@@ -26,7 +59,7 @@ function MessagesSidebar({
           value={search}
           className={styles.searchInput}
           placeholder="Buscar entre seguidos..."
-          onChange={(event) => onSearchChange(event.target.value)}
+          onChange={(event) => dispatch(setSearch(event.target.value))}
         />
       </div>
 
@@ -41,7 +74,7 @@ function MessagesSidebar({
                 <button
                   type="button"
                   className={styles.userButton}
-                  onClick={() => onOpenConversation(item)}
+                  onClick={() => handleOpenConversation(item.id)}
                 >
                   <Avatar name={item.name} avatarUrl={item.avatar_url} size="sm" />
                   <div>
@@ -64,7 +97,7 @@ function MessagesSidebar({
               <button
                 type="button"
                 className={`${styles.conversationItem} ${activeConversationId === conversation.id ? styles.conversationItemActive : ''}`}
-                onClick={() => onSelectConversation(conversation.id)}
+                onClick={() => handleSelectConversation(conversation.id)}
               >
                 <Avatar
                   name={conversation.other_user?.name}
