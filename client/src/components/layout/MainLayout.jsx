@@ -4,10 +4,13 @@ import Logo from '../ui/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { getNotesByUsername } from '../../services/noteService';
 import SearchPanel from '../common/SearchPanel';
+import UserMenu from './UserMenu';
+import { useToastContext } from '../../context/ToastContext';
 import styles from './MainLayout.module.css';
 
 function MainLayout() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { showToast } = useToastContext();
   const navigate = useNavigate();
   const [notesCount, setNotesCount] = useState(0);
 
@@ -21,7 +24,7 @@ function MainLayout() {
       try {
         const data = await getNotesByUsername(user.username);
         setNotesCount(data.profile?.notes_count || 0);
-      } catch (error) {
+      } catch {
         setNotesCount(0);
       }
     }
@@ -32,6 +35,10 @@ function MainLayout() {
   function handleLogout() {
     logout();
     navigate('/');
+  }
+
+  function handleOpenSettings() {
+    showToast('Configuraciones estará disponible pronto', 'info');
   }
 
   return (
@@ -88,18 +95,12 @@ function MainLayout() {
                   </svg>
                 </NavLink>
 
-                <NavLink
-                  to={`/profile/${user.username}`}
-                  className={({ isActive }) =>
-                    isActive ? `${styles.link} ${styles.active}` : styles.link
-                  }
-                >
-                  @{user.username} ({notesCount})
-                </NavLink>
-
-                <button className={styles.logoutButton} onClick={handleLogout}>
-                  Salir
-                </button>
+                <UserMenu
+                  user={user}
+                  notesCount={notesCount}
+                  onLogout={handleLogout}
+                  onOpenSettings={handleOpenSettings}
+                />
               </>
             ) : (
               <>

@@ -7,7 +7,7 @@
   border: 1px solid var(--color-border);
   border-radius: 999px;
   padding: 0.9rem 1rem;
-  background: white;
+  background: var(--color-surface);
   outline: none;
 }
 
@@ -21,7 +21,7 @@
   top: calc(100% + 0.5rem);
   left: 0;
   width: 100%;
-  background: white;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 20px;
   box-shadow: var(--shadow-md);
@@ -51,7 +51,7 @@
 }
 
 .resultItem:hover {
-  background: #f8fafc;
+  background: var(--color-bg-soft);
 }
 
 .resultItem p {

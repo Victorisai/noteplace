@@ -9,7 +9,7 @@
   top: 0;
   z-index: 20;
   backdrop-filter: blur(14px);
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -20,6 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
@@ -31,7 +32,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  margin-left: auto;
 }
 
 .link {
@@ -59,12 +60,12 @@
 }
 
 .messageLink:hover {
-  background: var(--color-surface);
+  background: var(--color-bg-soft);
   color: var(--color-text);
 }
 
 .link:hover {
-  background: var(--color-surface);
+  background: var(--color-bg-soft);
   color: var(--color-text);
 }
 
@@ -79,40 +80,42 @@
   padding: 2rem 0 3rem;
 }
 
-.logoutButton {
-  border: none;
-  background: #111827;
-  color: white;
-  font-weight: 700;
-  padding: 0.7rem 1rem;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
 .searchDesktop {
   flex: 1;
   max-width: 420px;
+  min-width: 280px;
+}
+
+@media (max-width: 980px) {
+  .headerInner {
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+  }
+
+  .searchDesktop {
+    order: 3;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 768px) {
   .headerInner {
-    flex-direction: column;
-    justify-content: center;
-    padding: 1rem 0;
+    width: min(1120px, calc(100% - 1rem));
+    min-height: unset;
   }
 
   .nav {
-    justify-content: center;
+    gap: 0.45rem;
+  }
+
+  .link {
+    padding: 0.62rem 0.9rem;
+    font-size: 0.94rem;
   }
 
   .main {
     padding-top: 1.5rem;
-  }
-}
-
-@media (max-width: 980px) {
-  .searchDesktop {
-    width: 100%;
-    max-width: none;
   }
 }

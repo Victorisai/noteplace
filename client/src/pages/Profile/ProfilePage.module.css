@@ -7,7 +7,7 @@
   display: flex;
   align-items: flex-start;
   gap: 1.25rem;
-  background: white;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 24px;
   padding: 1.5rem;
@@ -96,7 +96,7 @@
   flex-wrap: wrap;
   gap: 0.6rem;
   padding: 0.35rem;
-  background: white;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: var(--shadow-sm);
@@ -176,7 +176,7 @@
 }
 
 .profileDetailsCard {
-  background: white;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 24px;
   padding: 1.5rem;
