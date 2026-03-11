@@ -101,6 +101,8 @@
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   display: grid;
+  align-content: start;
+  grid-auto-rows: max-content;
   gap: 0.55rem;
   background: linear-gradient(180deg, rgba(238, 242, 255, 0.35), rgba(255, 255, 255, 0));
 }
