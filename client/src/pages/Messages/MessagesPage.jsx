@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import useToast from '../../hooks/useToast';
 import useDebounce from '../../hooks/useDebounce';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
@@ -46,6 +46,8 @@ function MessagesPage() {
   const [search, setSearch] = useState('');
   const [searchUsers, setSearchUsers] = useState([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
+  const [shellHeight, setShellHeight] = useState(null);
+  const shellRef = useRef(null);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -131,7 +133,7 @@ function MessagesPage() {
         setSearchingUsers(true);
         const data = await searchFollowingForMessages(debouncedSearch);
         setSearchUsers(data.users || []);
-      } catch (_error) {
+      } catch {
         setSearchUsers([]);
       } finally {
         setSearchingUsers(false);
@@ -140,6 +142,30 @@ function MessagesPage() {
 
     runUserSearch();
   }, [debouncedSearch]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const syncShellHeight = () => {
+      const shell = shellRef.current;
+      if (!shell) return;
+
+      const availableHeight = Math.floor(window.innerHeight - shell.getBoundingClientRect().top);
+      const nextHeight = Math.max(320, availableHeight);
+      setShellHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+    };
+
+    syncShellHeight();
+    const rafId = window.requestAnimationFrame(syncShellHeight);
+    window.addEventListener('resize', syncShellHeight);
+    window.visualViewport?.addEventListener('resize', syncShellHeight);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', syncShellHeight);
+      window.visualViewport?.removeEventListener('resize', syncShellHeight);
+    };
+  }, [isMobile, activeConversationId]);
 
   useEffect(() => {
     const token = localStorage.getItem('noteplace_token');
@@ -271,7 +297,11 @@ function MessagesPage() {
 
   return (
     <section className={styles.page}>
-      <div className={styles.shell}>
+      <div
+        ref={shellRef}
+        className={styles.shell}
+        style={shellHeight ? { '--messages-shell-height': `${shellHeight}px` } : undefined}
+      >
         <div className={`${styles.sidebarPane} ${isMobile && !showSidebarOnMobile ? styles.hiddenOnMobile : ''}`}>
           <MessagesSidebar
             search={search}

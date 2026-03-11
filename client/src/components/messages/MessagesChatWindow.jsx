@@ -21,10 +21,16 @@ function MessagesChatWindow({
   onComposerChange,
   onSendMessage,
 }) {
-  const bottomRef = useRef(null);
+  const messagesRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesRef.current;
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth',
+    });
   }, [messages, activeConversation?.id]);
 
   return (
@@ -56,7 +62,7 @@ function MessagesChatWindow({
             </div>
           </header>
 
-          <div className={styles.messages}>
+          <div ref={messagesRef} className={styles.messages}>
             {messagesLoading ? <p className={styles.state}>Cargando conversación...</p> : null}
             {!messagesLoading && !messages.length ? <p className={styles.state}>No hay mensajes todavía.</p> : null}
 
@@ -71,7 +77,6 @@ function MessagesChatWindow({
                 </div>
               );
             })}
-            <div ref={bottomRef} />
           </div>
 
           <form className={styles.composer} onSubmit={onSendMessage}>
