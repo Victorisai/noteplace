@@ -20,6 +20,10 @@ function MessagesChatWindow({
   onBack,
   onComposerChange,
   onSendMessage,
+  onTogglePinConversation,
+  onDeleteConversation,
+  isPinningConversation,
+  isDeletingConversation,
 }) {
   const messagesRef = useRef(null);
 
@@ -43,22 +47,58 @@ function MessagesChatWindow({
       ) : (
         <>
           <header className={styles.chatHeader}>
-            {isMobile ? (
-              <button type="button" className={styles.backButton} onClick={onBack} aria-label="Volver a chats">
+            <div className={styles.headerIdentity}>
+              {isMobile ? (
+                <button type="button" className={styles.backButton} onClick={onBack} aria-label="Volver a chats">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M14.5 6.5L9 12L14.5 17.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              ) : null}
+
+              <Avatar
+                name={activeConversation.other_user?.name}
+                avatarUrl={activeConversation.other_user?.avatar_url}
+                size="sm"
+              />
+              <div>
+                <p className={styles.userName}>{activeConversation.other_user?.name}</p>
+                <p className={styles.userUsername}>@{activeConversation.other_user?.username}</p>
+              </div>
+            </div>
+
+            <div className={styles.headerActions}>
+              <button
+                type="button"
+                className={`${styles.headerAction} ${activeConversation.is_pinned ? styles.headerActionPinned : ''}`}
+                onClick={onTogglePinConversation}
+                disabled={isPinningConversation || isDeletingConversation}
+                aria-label={activeConversation.is_pinned ? 'Desfijar chat' : 'Fijar chat'}
+                aria-pressed={Boolean(activeConversation.is_pinned)}
+                title={activeConversation.is_pinned ? 'Desfijar chat' : 'Fijar chat'}
+              >
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M14.5 6.5L9 12L14.5 17.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M7.5 3.75H16.5L14.25 9V14.25L12 15.75L9.75 14.25V9L7.5 3.75Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M12 15.75V20.25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
                 </svg>
               </button>
-            ) : null}
 
-            <Avatar
-              name={activeConversation.other_user?.name}
-              avatarUrl={activeConversation.other_user?.avatar_url}
-              size="sm"
-            />
-            <div>
-              <p className={styles.userName}>{activeConversation.other_user?.name}</p>
-              <p className={styles.userUsername}>@{activeConversation.other_user?.username}</p>
+              <button
+                type="button"
+                className={`${styles.headerAction} ${styles.headerActionDelete}`}
+                onClick={onDeleteConversation}
+                disabled={isPinningConversation || isDeletingConversation}
+                aria-label="Borrar chat"
+                title="Borrar chat"
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4.5 7.5H19.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                  <path d="M9.75 10.5V16.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                  <path d="M14.25 10.5V16.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                  <path d="M6.75 7.5L7.5 18.75C7.56 19.56 8.22 20.25 9.03 20.25H14.97C15.78 20.25 16.44 19.56 16.5 18.75L17.25 7.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M9 7.5V5.25C9 4.84 9.34 4.5 9.75 4.5H14.25C14.66 4.5 15 4.84 15 5.25V7.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
           </header>
 

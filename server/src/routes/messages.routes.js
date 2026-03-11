@@ -6,6 +6,8 @@ const {
   openConversation,
   listMessages,
   sendMessage,
+  setConversationPinned,
+  deleteConversation,
 } = require('../controllers/messages.controller');
 
 const router = express.Router();
@@ -17,5 +19,7 @@ router.get('/following', searchFollowing);
 router.post('/conversations/with/:userId', openConversation);
 router.get('/conversations/:conversationId/messages', listMessages);
 router.post('/conversations/:conversationId/messages', sendMessage);
+router.patch('/conversations/:conversationId/pin', setConversationPinned);
+router.delete('/conversations/:conversationId', deleteConversation);
 
 module.exports = router;

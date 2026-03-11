@@ -18,7 +18,15 @@ CREATE TABLE IF NOT EXISTS direct_messages (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS direct_conversation_pins (
+  conversation_id INTEGER NOT NULL REFERENCES direct_conversations(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (conversation_id, user_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_direct_conversations_user_a ON direct_conversations(user_a_id);
 CREATE INDEX IF NOT EXISTS idx_direct_conversations_user_b ON direct_conversations(user_b_id);
 CREATE INDEX IF NOT EXISTS idx_direct_messages_conversation ON direct_messages(conversation_id, id DESC);
 CREATE INDEX IF NOT EXISTS idx_direct_messages_unread ON direct_messages(conversation_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_direct_conversation_pins_user ON direct_conversation_pins(user_id, created_at DESC);

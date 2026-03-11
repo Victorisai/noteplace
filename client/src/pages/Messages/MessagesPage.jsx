@@ -7,11 +7,13 @@ import { useAuth } from '../../context/AuthContext';
 import MessagesSidebar from '../../components/messages/MessagesSidebar';
 import MessagesChatWindow from '../../components/messages/MessagesChatWindow';
 import {
+  deleteConversation,
   getConversationMessages,
   getMessageConversations,
   openConversationWithUser,
   searchFollowingForMessages,
   sendConversationMessage,
+  setConversationPinned,
 } from '../../services/messageService';
 import {
   connectMessagingSocket,
@@ -20,13 +22,25 @@ import {
 } from '../../services/messagingSocket';
 import styles from './MessagesPage.module.css';
 
-function upsertConversation(conversations, conversation) {
-  const existingIndex = conversations.findIndex((item) => item.id === conversation.id);
-  if (existingIndex === -1) return [conversation, ...conversations];
+function getConversationOrderTimestamp(conversation) {
+  const value = conversation?.last_message?.created_at || conversation?.updated_at;
+  const timestamp = value ? new Date(value).getTime() : 0;
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
 
-  const next = [...conversations];
-  next.splice(existingIndex, 1);
-  return [conversation, ...next];
+function sortConversations(conversations) {
+  return [...conversations].sort((a, b) => {
+    const pinDiff = Number(Boolean(b.is_pinned)) - Number(Boolean(a.is_pinned));
+    if (pinDiff !== 0) return pinDiff;
+
+    return getConversationOrderTimestamp(b) - getConversationOrderTimestamp(a);
+  });
+}
+
+function upsertConversation(conversations, conversation) {
+  const next = conversations.filter((item) => item.id !== conversation.id);
+  next.push(conversation);
+  return sortConversations(next);
 }
 
 function MessagesPage() {
@@ -46,6 +60,8 @@ function MessagesPage() {
   const [search, setSearch] = useState('');
   const [searchUsers, setSearchUsers] = useState([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
+  const [pinningConversationId, setPinningConversationId] = useState(null);
+  const [deletingConversationId, setDeletingConversationId] = useState(null);
   const [shellHeight, setShellHeight] = useState(null);
   const shellRef = useRef(null);
 
@@ -78,9 +94,9 @@ function MessagesPage() {
         setConversationsLoading(true);
         const data = await getMessageConversations();
         const list = data.conversations || [];
-        setConversations(list);
+        setConversations(sortConversations(list));
         setActiveConversationId((prev) => {
-          if (prev) return prev;
+          if (prev && list.some((item) => item.id === prev)) return prev;
           if (isMobile) return null;
           return list[0]?.id || null;
         });
@@ -98,6 +114,18 @@ function MessagesPage() {
     if (!isMobile && !activeConversationId && conversations.length) {
       setActiveConversationId(conversations[0].id);
     }
+  }, [activeConversationId, conversations, isMobile]);
+
+  useEffect(() => {
+    if (!activeConversationId) return;
+    if (conversations.some((item) => item.id === activeConversationId)) return;
+
+    if (isMobile) {
+      setActiveConversationId(null);
+      return;
+    }
+
+    setActiveConversationId(conversations[0]?.id || null);
   }, [activeConversationId, conversations, isMobile]);
 
   useEffect(() => {
@@ -204,7 +232,7 @@ function MessagesPage() {
 
       if (shouldRefreshConversations) {
         getMessageConversations()
-          .then((data) => setConversations(data.conversations || []))
+          .then((data) => setConversations(sortConversations(data.conversations || [])))
           .catch(() => {});
       }
 
@@ -257,25 +285,78 @@ function MessagesPage() {
 
       setComposer('');
       setMessages((prev) => (prev.some((msg) => msg.id === newMessage.id) ? prev : [...prev, newMessage]));
-      setConversations((prev) => prev.map((item) => (
-        item.id === activeConversationId
-          ? {
-            ...item,
-            updated_at: newMessage.created_at,
-            unread_count: 0,
-            last_message: {
-              id: newMessage.id,
-              sender_id: newMessage.sender_id,
-              content: newMessage.content,
-              created_at: newMessage.created_at,
-            },
-          }
-          : item
-      )));
+      setConversations((prev) => {
+        const target = prev.find((item) => item.id === activeConversationId);
+        if (!target) return prev;
+
+        const updatedConversation = {
+          ...target,
+          updated_at: newMessage.created_at,
+          unread_count: 0,
+          last_message: {
+            id: newMessage.id,
+            sender_id: newMessage.sender_id,
+            content: newMessage.content,
+            created_at: newMessage.created_at,
+          },
+        };
+
+        return upsertConversation(prev, updatedConversation);
+      });
     } catch (error) {
       showToast(error.message || 'No se pudo enviar el mensaje', 'error');
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleTogglePinConversation() {
+    if (!activeConversation || pinningConversationId || deletingConversationId) return;
+
+    const conversationId = activeConversation.id;
+    const nextPinnedState = !activeConversation.is_pinned;
+
+    try {
+      setPinningConversationId(conversationId);
+      const data = await setConversationPinned(conversationId, nextPinnedState);
+      const updatedConversation = data.conversation || { ...activeConversation, is_pinned: nextPinnedState };
+      setConversations((prev) => upsertConversation(prev, updatedConversation));
+      showToast(nextPinnedState ? 'Chat fijado' : 'Chat desfijado', 'success');
+    } catch (error) {
+      showToast(error.message || 'No se pudo actualizar el chat', 'error');
+    } finally {
+      setPinningConversationId(null);
+    }
+  }
+
+  async function handleDeleteConversation() {
+    if (!activeConversation || deletingConversationId || pinningConversationId) return;
+
+    const confirmDelete = window.confirm('¿Seguro que quieres borrar este chat por completo? Esta acción no se puede deshacer.');
+    if (!confirmDelete) return;
+
+    const conversationId = activeConversation.id;
+
+    try {
+      setDeletingConversationId(conversationId);
+      await deleteConversation(conversationId);
+
+      setConversations((prev) => {
+        const nextConversations = prev.filter((item) => item.id !== conversationId);
+        setActiveConversationId((currentActiveId) => {
+          if (currentActiveId !== conversationId) return currentActiveId;
+          setMessages([]);
+          setComposer('');
+          if (isMobile) return null;
+          return nextConversations[0]?.id || null;
+        });
+        return nextConversations;
+      });
+      showToast('Chat borrado correctamente', 'success');
+    } catch (error) {
+      showToast(error.message || 'No se pudo borrar el chat', 'error');
+    } finally {
+      setDeletingConversationId(null);
     }
   }
 
@@ -327,6 +408,10 @@ function MessagesPage() {
             onBack={handleBackToList}
             onComposerChange={setComposer}
             onSendMessage={handleSendMessage}
+            onTogglePinConversation={handleTogglePinConversation}
+            onDeleteConversation={handleDeleteConversation}
+            isPinningConversation={pinningConversationId === activeConversation?.id}
+            isDeletingConversation={deletingConversationId === activeConversation?.id}
           />
         </div>
       </div>

@@ -4,6 +4,8 @@ const {
   listMessagesByConversation,
   searchFollowingForMessages,
   sendMessageToConversation,
+  setConversationPinnedByUser,
+  deleteConversationByIdForUser,
 } = require('../services/messages.service');
 const { emitMessageToUsers } = require('../socket');
 
@@ -74,10 +76,37 @@ async function sendMessage(req, res) {
   }
 }
 
+async function setConversationPinned(req, res) {
+  try {
+    const conversation = await setConversationPinnedByUser({
+      conversationId: Number(req.params.conversationId),
+      userId: req.user.id,
+      pinned: req.body?.pinned,
+    });
+    return res.status(200).json({ conversation });
+  } catch (error) {
+    return res.status(400).json({ message: error.message || 'Error al fijar conversación' });
+  }
+}
+
+async function deleteConversation(req, res) {
+  try {
+    await deleteConversationByIdForUser({
+      conversationId: Number(req.params.conversationId),
+      userId: req.user.id,
+    });
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    return res.status(400).json({ message: error.message || 'Error al borrar conversación' });
+  }
+}
+
 module.exports = {
   listConversations,
   searchFollowing,
   openConversation,
   listMessages,
   sendMessage,
+  setConversationPinned,
+  deleteConversation,
 };

@@ -23,6 +23,7 @@ function mapConversationRow(row) {
   return {
     id: row.id,
     updated_at: row.updated_at,
+    is_pinned: Boolean(row.is_pinned),
     unread_count: Number(row.unread_count || 0),
     other_user: {
       id: row.other_user_id,
@@ -89,6 +90,17 @@ async function ensureMessagesSchema() {
   await pool.query(
     `CREATE INDEX IF NOT EXISTS idx_direct_messages_unread ON direct_messages(conversation_id, is_read)`
   );
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS direct_conversation_pins (
+      conversation_id INTEGER NOT NULL REFERENCES direct_conversations(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (conversation_id, user_id)
+    )`
+  );
+  await pool.query(
+    `CREATE INDEX IF NOT EXISTS idx_direct_conversation_pins_user ON direct_conversation_pins(user_id, created_at DESC)`
+  );
 
   schemaReady = true;
 }
@@ -108,6 +120,7 @@ async function getConversationByIdForUser({ conversationId, userId }) {
       lm.sender_id AS last_sender_id,
       lm.content AS last_content,
       lm.created_at AS last_created_at,
+      (p.conversation_id IS NOT NULL) AS is_pinned,
       COALESCE(unread.total, 0) AS unread_count
      FROM direct_conversations c
      INNER JOIN users u ON u.id = CASE WHEN c.user_a_id = $1 THEN c.user_b_id ELSE c.user_a_id END
@@ -125,6 +138,9 @@ async function getConversationByIdForUser({ conversationId, userId }) {
          AND m2.sender_id <> $1
          AND m2.is_read = false
      ) unread ON true
+     LEFT JOIN direct_conversation_pins p
+       ON p.conversation_id = c.id
+      AND p.user_id = $1
      WHERE c.id = $2
        AND (c.user_a_id = $1 OR c.user_b_id = $1)
      LIMIT 1`,
@@ -150,6 +166,7 @@ async function listConversationsByUserId(userId) {
       lm.sender_id AS last_sender_id,
       lm.content AS last_content,
       lm.created_at AS last_created_at,
+      (p.conversation_id IS NOT NULL) AS is_pinned,
       COALESCE(unread.total, 0) AS unread_count
      FROM direct_conversations c
      INNER JOIN users u ON u.id = CASE WHEN c.user_a_id = $1 THEN c.user_b_id ELSE c.user_a_id END
@@ -167,8 +184,11 @@ async function listConversationsByUserId(userId) {
          AND m2.sender_id <> $1
          AND m2.is_read = false
      ) unread ON true
+     LEFT JOIN direct_conversation_pins p
+       ON p.conversation_id = c.id
+      AND p.user_id = $1
      WHERE c.user_a_id = $1 OR c.user_b_id = $1
-     ORDER BY COALESCE(lm.created_at, c.updated_at) DESC`,
+     ORDER BY (p.conversation_id IS NOT NULL) DESC, COALESCE(lm.created_at, c.updated_at) DESC`,
     [userId]
   );
 
@@ -352,6 +372,59 @@ async function sendMessageToConversation({ conversationId, senderId, content }) 
   };
 }
 
+async function setConversationPinnedByUser({ conversationId, userId, pinned }) {
+  await ensureMessagesSchema();
+  const normalizedConversationId = Number(conversationId);
+  const shouldPin = Boolean(pinned);
+
+  const accessCheck = await pool.query(
+    `SELECT id
+     FROM direct_conversations
+     WHERE id = $1
+       AND (user_a_id = $2 OR user_b_id = $2)
+     LIMIT 1`,
+    [normalizedConversationId, userId]
+  );
+
+  if (!accessCheck.rows.length) throw new Error('Conversación no encontrada');
+
+  if (shouldPin) {
+    await pool.query(
+      `INSERT INTO direct_conversation_pins (conversation_id, user_id)
+       VALUES ($1, $2)
+       ON CONFLICT (conversation_id, user_id) DO NOTHING`,
+      [normalizedConversationId, userId]
+    );
+  } else {
+    await pool.query(
+      `DELETE FROM direct_conversation_pins
+       WHERE conversation_id = $1
+         AND user_id = $2`,
+      [normalizedConversationId, userId]
+    );
+  }
+
+  return getConversationByIdForUser({
+    conversationId: normalizedConversationId,
+    userId,
+  });
+}
+
+async function deleteConversationByIdForUser({ conversationId, userId }) {
+  await ensureMessagesSchema();
+  const normalizedConversationId = Number(conversationId);
+
+  const deleted = await pool.query(
+    `DELETE FROM direct_conversations
+     WHERE id = $1
+       AND (user_a_id = $2 OR user_b_id = $2)
+     RETURNING id`,
+    [normalizedConversationId, userId]
+  );
+
+  if (!deleted.rows.length) throw new Error('Conversación no encontrada');
+}
+
 module.exports = {
   ensureMessagesSchema,
   getOrCreateConversation,
@@ -360,4 +433,6 @@ module.exports = {
   listMessagesByConversation,
   searchFollowingForMessages,
   sendMessageToConversation,
+  setConversationPinnedByUser,
+  deleteConversationByIdForUser,
 };

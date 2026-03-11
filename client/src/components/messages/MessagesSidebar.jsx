@@ -73,7 +73,17 @@ function MessagesSidebar({
                 />
                 <div className={styles.conversationInfo}>
                   <div className={styles.conversationHeader}>
-                    <p className={styles.userName}>{conversation.other_user?.name}</p>
+                    <div className={styles.nameWrap}>
+                      <p className={styles.userName}>{conversation.other_user?.name}</p>
+                      {conversation.is_pinned ? (
+                        <span className={styles.pinnedTag} title="Chat fijado" aria-label="Chat fijado">
+                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M7.5 3.75H16.5L14.25 9V14.25L12 15.75L9.75 14.25V9L7.5 3.75Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M12 15.75V20.25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                          </svg>
+                        </span>
+                      ) : null}
+                    </div>
                     <span>{conversation.last_message?.created_at ? formatConversationTime(conversation.last_message.created_at) : ''}</span>
                   </div>
                   <p className={styles.lastMessage}>

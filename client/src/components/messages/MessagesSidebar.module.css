@@ -92,10 +92,30 @@
   align-items: center;
 }
 
+.nameWrap {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .conversationHeader span {
   font-size: 0.73rem;
   color: var(--color-text-muted);
   font-weight: 600;
+}
+
+.pinnedTag {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary);
+  display: grid;
+  place-items: center;
+}
+
+.pinnedTag svg {
+  width: 0.8rem;
+  height: 0.8rem;
 }
 
 .lastMessage {
@@ -130,6 +150,9 @@
   margin: 0;
   font-weight: 700;
   color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .userUsername {

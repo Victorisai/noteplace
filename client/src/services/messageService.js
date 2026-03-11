@@ -27,3 +27,16 @@ export function sendConversationMessage(conversationId, content) {
     body: JSON.stringify({ content }),
   });
 }
+
+export function setConversationPinned(conversationId, pinned) {
+  return apiRequest(`/messages/conversations/${conversationId}/pin`, {
+    method: 'PATCH',
+    body: JSON.stringify({ pinned: Boolean(pinned) }),
+  });
+}
+
+export function deleteConversation(conversationId) {
+  return apiRequest(`/messages/conversations/${conversationId}`, {
+    method: 'DELETE',
+  });
+}
