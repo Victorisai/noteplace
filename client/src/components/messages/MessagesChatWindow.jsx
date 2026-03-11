@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Avatar from '../ui/Avatar';
 import styles from './MessagesChatWindow.module.css';
 
@@ -26,6 +26,7 @@ function MessagesChatWindow({
   isDeletingConversation,
 }) {
   const messagesRef = useRef(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const container = messagesRef.current;
@@ -36,6 +37,23 @@ function MessagesChatWindow({
       behavior: 'smooth',
     });
   }, [messages, activeConversation?.id]);
+
+  useEffect(() => {
+    if (!showDeleteModal) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key !== 'Escape' || isDeletingConversation) return;
+      setShowDeleteModal(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showDeleteModal, isDeletingConversation]);
+
+  async function handleConfirmDelete() {
+    const deleted = await onDeleteConversation?.();
+    if (deleted) setShowDeleteModal(false);
+  }
 
   return (
     <div className={styles.chat}>
@@ -86,7 +104,7 @@ function MessagesChatWindow({
               <button
                 type="button"
                 className={`${styles.headerAction} ${styles.headerActionDelete}`}
-                onClick={onDeleteConversation}
+                onClick={() => setShowDeleteModal(true)}
                 disabled={isPinningConversation || isDeletingConversation}
                 aria-label="Borrar chat"
                 title="Borrar chat"
@@ -131,6 +149,49 @@ function MessagesChatWindow({
               {sending ? 'Enviando...' : 'Enviar'}
             </button>
           </form>
+
+          {showDeleteModal ? (
+            <div
+              className={styles.modalOverlay}
+              role="presentation"
+              onClick={() => {
+                if (isDeletingConversation) return;
+                setShowDeleteModal(false);
+              }}
+            >
+              <div
+                className={styles.deleteModal}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-chat-title"
+                aria-describedby="delete-chat-description"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <h3 id="delete-chat-title">Borrar chat</h3>
+                <p id="delete-chat-description">
+                  ¿Seguro que quieres borrar esta conversación por completo? Esta acción no se puede deshacer.
+                </p>
+                <div className={styles.deleteModalActions}>
+                  <button
+                    type="button"
+                    className={styles.deleteModalCancel}
+                    onClick={() => setShowDeleteModal(false)}
+                    disabled={isDeletingConversation}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.deleteModalConfirm}
+                    onClick={handleConfirmDelete}
+                    disabled={isDeletingConversation}
+                  >
+                    {isDeletingConversation ? 'Borrando...' : 'Sí, borrar chat'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </>
       )}
     </div>

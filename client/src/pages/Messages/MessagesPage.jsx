@@ -330,10 +330,7 @@ function MessagesPage() {
   }
 
   async function handleDeleteConversation() {
-    if (!activeConversation || deletingConversationId || pinningConversationId) return;
-
-    const confirmDelete = window.confirm('¿Seguro que quieres borrar este chat por completo? Esta acción no se puede deshacer.');
-    if (!confirmDelete) return;
+    if (!activeConversation || deletingConversationId || pinningConversationId) return false;
 
     const conversationId = activeConversation.id;
 
@@ -353,8 +350,10 @@ function MessagesPage() {
         return nextConversations;
       });
       showToast('Chat borrado correctamente', 'success');
+      return true;
     } catch (error) {
       showToast(error.message || 'No se pudo borrar el chat', 'error');
+      return false;
     } finally {
       setDeletingConversationId(null);
     }
