@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Logo from '../ui/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { getNotesByUsername } from '../../services/noteService';
@@ -12,6 +12,9 @@ function MainLayout() {
   const { showToast } = useToastContext();
   const navigate = useNavigate();
   const [notesCount, setNotesCount] = useState(0);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [headerHeight, setHeaderHeight] = useState(72);
+  const headerRef = useRef(null);
 
   useEffect(() => {
     async function loadCount() {
@@ -31,6 +34,119 @@ function MainLayout() {
     loadCount();
   }, [user?.username]);
 
+  useEffect(() => {
+    const headerElement = headerRef.current;
+    if (!headerElement) return undefined;
+
+    const measureHeader = () => {
+      const nextHeight = Math.round(headerElement.getBoundingClientRect().height);
+      setHeaderHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+    };
+
+    measureHeader();
+    window.addEventListener('resize', measureHeader);
+
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        window.removeEventListener('resize', measureHeader);
+      };
+    }
+
+    const observer = new ResizeObserver(measureHeader);
+    observer.observe(headerElement);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measureHeader);
+    };
+  }, []);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let lastDirection = 0;
+    let accumulatedDelta = 0;
+    let lastTouchY = null;
+
+    const hideThreshold = 28;
+    const showThreshold = 12;
+    const topSafeZone = 24;
+
+    function handleScroll() {
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY;
+
+      if (Math.abs(delta) < 1) {
+        return;
+      }
+
+      if (currentScrollY <= topSafeZone) {
+        setIsHeaderVisible(true);
+        accumulatedDelta = 0;
+        lastDirection = 0;
+        return;
+      }
+
+      const direction = delta > 0 ? 1 : -1;
+
+      if (direction !== lastDirection) {
+        accumulatedDelta = 0;
+        lastDirection = direction;
+      }
+
+      accumulatedDelta += Math.abs(delta);
+
+      if (direction === 1 && accumulatedDelta >= hideThreshold) {
+        setIsHeaderVisible(false);
+        accumulatedDelta = 0;
+      }
+
+      if (direction === -1 && accumulatedDelta >= showThreshold) {
+        setIsHeaderVisible(true);
+        accumulatedDelta = 0;
+      }
+      lastScrollY = currentScrollY;
+    }
+
+    function handleWheel(event) {
+      if (event.deltaY < -2) {
+        setIsHeaderVisible(true);
+      }
+    }
+
+    function handleTouchStart(event) {
+      lastTouchY = event.touches[0]?.clientY ?? null;
+    }
+
+    function handleTouchMove(event) {
+      const currentTouchY = event.touches[0]?.clientY;
+      if (currentTouchY == null || lastTouchY == null) return;
+
+      if (currentTouchY - lastTouchY > 4) {
+        setIsHeaderVisible(true);
+      }
+
+      lastTouchY = currentTouchY;
+    }
+
+    function handleTouchEnd() {
+      lastTouchY = null;
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
   function handleLogout() {
     logout();
     navigate('/');
@@ -41,8 +157,11 @@ function MainLayout() {
   }
 
   return (
-    <div className={styles.app}>
-      <header className={styles.header}>
+    <div className={styles.app} style={{ '--header-height': `${headerHeight}px` }}>
+      <header
+        ref={headerRef}
+        className={`${styles.header} ${isHeaderVisible ? styles.headerVisible : styles.headerHidden}`}
+      >
         <div className={styles.headerInner}>
           <Link to={isAuthenticated ? '/feed' : '/'} className={styles.brand}>
             <Logo />
