@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import Logo from '../ui/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { getNotesByUsername } from '../../services/noteService';
-import SearchPanel from '../common/SearchPanel';
 import UserMenu from './UserMenu';
 import { useToastContext } from '../../context/ToastContext';
 import styles from './MainLayout.module.css';
@@ -48,12 +47,6 @@ function MainLayout() {
           <Link to={isAuthenticated ? '/feed' : '/'} className={styles.brand}>
             <Logo />
           </Link>
-
-          {isAuthenticated ? (
-            <div className={styles.searchDesktop}>
-              <SearchPanel />
-            </div>
-          ) : null}
 
           <nav className={styles.nav}>
             {!isAuthenticated ? (
