@@ -25,6 +25,9 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
   text-decoration: none;
 }
 

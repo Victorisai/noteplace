@@ -1,10 +1,19 @@
 .logo {
   display: flex;
   align-items: center;
+  width: clamp(130px, 22vw, 185px);
 }
 
-.logo img {
-  width: 180px;
+.logoImage {
+  width: 100%;
   max-width: 100%;
+  height: auto;
   display: block;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    width: clamp(120px, 40vw, 170px);
+  }
 }
