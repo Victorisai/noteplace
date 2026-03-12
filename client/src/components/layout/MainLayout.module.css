@@ -2,6 +2,8 @@
   min-height: 100vh;
   background: var(--color-bg);
   color: var(--color-text);
+  --layout-max-width: 1320px;
+  --layout-gutter: clamp(0.5rem, 2.5vw, 1.5rem);
 }
 
 .header {
@@ -14,7 +16,7 @@
 }
 
 .headerInner {
-  width: min(1120px, calc(100% - 2rem));
+  width: min(var(--layout-max-width), calc(100% - (var(--layout-gutter) * 2)));
   margin: 0 auto;
   min-height: 72px;
   display: flex;
@@ -78,7 +80,7 @@
 }
 
 .main {
-  width: min(1120px, calc(100% - 2rem));
+  width: min(var(--layout-max-width), calc(100% - (var(--layout-gutter) * 2)));
   margin: 0 auto;
   padding: 2rem 0 3rem;
 }
@@ -116,7 +118,6 @@
 
 @media (max-width: 768px) {
   .headerInner {
-    width: min(1120px, calc(100% - 1rem));
     min-height: unset;
   }
 
