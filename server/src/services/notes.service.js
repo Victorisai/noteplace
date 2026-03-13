@@ -86,29 +86,81 @@ async function createNote({ content, userId, imageUrls = [] }) {
   }
 }
 
-async function getFeedNotes({ cursor = null, limit = 10, userId = null, query = '' }) {
+async function getFeedNotes({ cursor = null, limit = 10, userId = null, query = '', segment = 'following', sort = 'recent' }) {
   const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 20);
   const search = `%${query.trim().toLowerCase()}%`;
+  const normalizedSegment = ['following', 'discover'].includes(segment) ? segment : 'following';
+  const normalizedSort = ['recent', 'trending'].includes(sort) ? sort : 'recent';
 
-  const result = await pool.query(
-    `${NOTE_SELECT}
-     WHERE (
-       $1 = '%%' OR LOWER(n.content) LIKE $1 OR LOWER(u.username) LIKE $1 OR LOWER(u.name) LIKE $1
-     )
-     AND ($3::INTEGER IS NULL OR n.id < $3)
-     GROUP BY n.id, u.id
-     ORDER BY n.id DESC
-     LIMIT $4`,
-    [search, userId, cursor ? Number(cursor) : null, safeLimit + 1]
-  );
+  let segmentCondition = '1=1';
+
+  if (normalizedSegment === 'following') {
+    segmentCondition = `(
+      $2::INTEGER IS NULL
+      OR n.user_id = $2
+      OR EXISTS (
+        SELECT 1
+        FROM follows f
+        WHERE f.follower_id = $2
+          AND f.following_id = n.user_id
+      )
+    )`;
+  }
+
+  if (normalizedSegment === 'discover') {
+    segmentCondition = `(
+      $2::INTEGER IS NULL
+      OR (
+        n.user_id <> $2
+        AND NOT EXISTS (
+          SELECT 1
+          FROM follows f
+          WHERE f.follower_id = $2
+            AND f.following_id = n.user_id
+        )
+      )
+    )`;
+  }
+
+  const isTrending = normalizedSort === 'trending';
+  const cursorValue = Number(cursor) || 0;
+
+  const result = isTrending
+    ? await pool.query(
+      `${NOTE_SELECT}
+       WHERE (
+         $1 = '%%' OR LOWER(n.content) LIKE $1 OR LOWER(u.username) LIKE $1 OR LOWER(u.name) LIKE $1
+       )
+       AND ${segmentCondition}
+       GROUP BY n.id, u.id
+       ORDER BY (COUNT(DISTINCT nl.id) + COUNT(DISTINCT nc.id)) DESC, n.id DESC
+       LIMIT $3
+       OFFSET $4`,
+      [search, userId, safeLimit + 1, cursorValue]
+    )
+    : await pool.query(
+      `${NOTE_SELECT}
+       WHERE (
+         $1 = '%%' OR LOWER(n.content) LIKE $1 OR LOWER(u.username) LIKE $1 OR LOWER(u.name) LIKE $1
+       )
+       AND ${segmentCondition}
+       AND ($3::INTEGER IS NULL OR n.id < $3)
+       GROUP BY n.id, u.id
+       ORDER BY n.id DESC
+       LIMIT $4`,
+      [search, userId, cursor ? Number(cursor) : null, safeLimit + 1]
+    );
 
   const hasMore = result.rows.length > safeLimit;
   const rows = hasMore ? result.rows.slice(0, safeLimit) : result.rows;
   const notes = rows.map(mapNoteRow);
+  const nextCursor = hasMore
+    ? (isTrending ? cursorValue + safeLimit : notes[notes.length - 1].id)
+    : null;
 
   return {
     notes,
-    nextCursor: hasMore ? notes[notes.length - 1].id : null,
+    nextCursor,
     hasMore,
   };
 }

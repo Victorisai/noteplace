@@ -8,9 +8,23 @@ import NotificationsPanel from '../../components/notifications/NotificationsPane
 import { createNote, deleteNote, getFeedNotes } from '../../services/noteService';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 import useToast from '../../hooks/useToast';
-import useDebounce from '../../hooks/useDebounce';
 import useInfiniteScroll from '../../hooks/useInfiniteScroll';
 import styles from './FeedPage.module.css';
+
+const FEED_SEGMENTS = [
+  { id: 'following', label: 'Siguiendo' },
+  { id: 'discover', label: 'Descubrir' },
+];
+
+const FEED_SORTS = [
+  { id: 'recent', label: 'Recientes' },
+  { id: 'trending', label: 'Tendencias' },
+];
+
+const SEGMENT_HINTS = {
+  following: 'Notas de cuentas que sigues (y las tuyas).',
+  discover: 'Contenido nuevo de personas que todavía no sigues.',
+};
 
 function FeedPage() {
   const { showToast } = useToast();
@@ -20,22 +34,31 @@ function FeedPage() {
   const [publishing, setPublishing] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
+  const [segment, setSegment] = useState('following');
+  const [sort, setSort] = useState('recent');
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
-  const debouncedSearch = useDebounce(search, 400);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState(null);
 
   useDocumentTitle('Feed | NotePlace');
 
-  const loadFeed = useCallback(async (reset = false) => {
-    if (reset) setLoadingFeed(true);
-    else setLoadingMore(true);
+  function resetFeedState() {
+    setCursor(null);
+    setHasMore(true);
+    setNotes([]);
+  }
+
+  const loadFeed = useCallback(async ({ reset = false, cursorValue = null } = {}) => {
+    if (reset) {
+      setLoadingFeed(true);
+    } else {
+      setLoadingMore(true);
+    }
 
     try {
       setError('');
-      const data = await getFeedNotes({ cursor: reset ? null : cursor, limit: 10, q: debouncedSearch });
+      const data = await getFeedNotes({ cursor: reset ? null : cursorValue, limit: 10, segment, sort });
       setCursor(data.nextCursor);
       setHasMore(data.hasMore);
       setNotes((prev) => {
@@ -51,17 +74,15 @@ function FeedPage() {
       setLoadingFeed(false);
       setLoadingMore(false);
     }
-  }, [cursor, debouncedSearch, showToast]);
+  }, [segment, showToast, sort]);
 
   useEffect(() => {
-    setCursor(null);
-    setHasMore(true);
-    loadFeed(true);
-  }, [debouncedSearch]);
+    loadFeed({ reset: true, cursorValue: null });
+  }, [loadFeed, segment, sort]);
 
   const sentinelRef = useInfiniteScroll({
-    enabled: !loadingFeed && !loadingMore && hasMore,
-    onIntersect: () => loadFeed(false),
+    enabled: !loadingFeed && !loadingMore && hasMore && cursor !== null,
+    onIntersect: () => loadFeed({ reset: false, cursorValue: cursor }),
   });
 
   async function handleCreateNote(content, images) {
@@ -100,12 +121,51 @@ function FeedPage() {
     <section className={styles.page}>
       <div className={styles.searchWrap}>
         <SearchPanel />
-        <input className={styles.feedSearch} type="text" placeholder="Filtrar feed por texto o usuario..." value={search} onChange={(event) => setSearch(event.target.value)} />
+        <div className={styles.feedSegments} role="tablist" aria-label="Segmentos del feed">
+          {FEED_SEGMENTS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={segment === item.id}
+              className={`${styles.segmentButton} ${segment === item.id ? styles.segmentButtonActive : ''}`}
+              onClick={() => {
+                if (segment === item.id) return;
+                resetFeedState();
+                setSegment(item.id);
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <p className={styles.segmentHint}>{SEGMENT_HINTS[segment]}</p>
       </div>
 
       <div className={styles.content}>
         <div className={styles.mainColumn}>
           <NoteComposer onSubmit={handleCreateNote} loading={publishing} />
+          <div className={styles.feedSortWrap}>
+            <p className={styles.sortLabel}>Ver notas por:</p>
+            <div className={styles.feedSorts} role="tablist" aria-label="Orden del feed">
+              {FEED_SORTS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={sort === item.id}
+                  className={`${styles.sortButton} ${sort === item.id ? styles.sortButtonActive : ''}`}
+                  onClick={() => {
+                    if (sort === item.id) return;
+                    resetFeedState();
+                    setSort(item.id);
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
           {error ? <p className={styles.error}>{error}</p> : null}
           {loadingFeed ? <><SkeletonNoteCard /><SkeletonNoteCard /></> : <NotesList notes={notes} onDelete={handleAskDelete} onUpdate={handleUpdateNote} deletingId={deletingId} />}
           <div ref={sentinelRef} style={{ height: 1 }} />

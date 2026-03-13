@@ -1,7 +1,7 @@
 import apiRequest from './api';
 
-export async function getFeedNotes({ cursor = null, limit = 10, q = '' } = {}) {
-  const params = new URLSearchParams({ limit: String(limit), q });
+export async function getFeedNotes({ cursor = null, limit = 10, q = '', segment = 'following', sort = 'recent' } = {}) {
+  const params = new URLSearchParams({ limit: String(limit), q, segment, sort });
   if (cursor) params.set('cursor', String(cursor));
   return apiRequest(`/notes?${params.toString()}`);
 }

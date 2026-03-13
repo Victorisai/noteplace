@@ -27,9 +27,9 @@ async function create(req, res) {
 
 async function getFeed(req, res) {
   try {
-    const { cursor = null, limit = 10, q = '' } = req.query;
+    const { cursor = null, limit = 10, q = '', segment = 'following', sort = 'recent' } = req.query;
     const userId = req.user?.id || null;
-    const data = await getFeedNotes({ cursor, limit, query: q, userId });
+    const data = await getFeedNotes({ cursor, limit, query: q, userId, segment, sort });
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ message: error.message || 'Error al obtener el feed' });
