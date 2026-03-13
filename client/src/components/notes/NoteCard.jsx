@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { toAbsoluteAssetUrl } from '../../services/api';
 import Avatar from '../ui/Avatar';
@@ -29,6 +29,8 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
   const [editValue, setEditValue] = useState(note.content);
   const [savingEdit, setSavingEdit] = useState(false);
   const [sendingComment, setSendingComment] = useState(false);
+  const [ownerMenuOpen, setOwnerMenuOpen] = useState(false);
+  const ownerMenuRef = useRef(null);
 
   useEffect(() => {
     setLiked(note.is_liked);
@@ -36,7 +38,26 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
     setLikesCount(note.likes_count || 0);
     setCommentsCount(note.comments_count || 0);
     setEditValue(note.content);
+    setOwnerMenuOpen(false);
   }, [note]);
+
+  useEffect(() => {
+    if (!ownerMenuOpen) return undefined;
+
+    function handleOutsideClick(event) {
+      if (ownerMenuRef.current && !ownerMenuRef.current.contains(event.target)) {
+        setOwnerMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [ownerMenuOpen]);
 
   async function handleToggleLike() {
     if (!isAuthenticated) return showToast('Debes iniciar sesión para dar like', 'error');
@@ -104,6 +125,16 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
     }
   }
 
+  function handleToggleEditing() {
+    setEditing((prev) => !prev);
+    setOwnerMenuOpen(false);
+  }
+
+  function handleDeleteNote() {
+    onDelete(note.id);
+    setOwnerMenuOpen(false);
+  }
+
   return (
     <article className={styles.card}>
       <div className={styles.header}>
@@ -116,9 +147,28 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
         </div>
 
         {isOwner ? (
-          <div className={styles.ownerActions}>
-            <button className={styles.secondaryButton} onClick={() => setEditing((prev) => !prev)}>{editing ? 'Cancelar' : 'Editar'}</button>
-            <button className={styles.deleteButton} onClick={() => onDelete(note.id)} disabled={deleting}>{deleting ? 'Eliminando...' : 'Eliminar'}</button>
+          <div className={styles.ownerActions} ref={ownerMenuRef}>
+            <button
+              type="button"
+              className={styles.ownerMenuTrigger}
+              aria-haspopup="menu"
+              aria-expanded={ownerMenuOpen}
+              aria-label="Acciones de la nota"
+              onClick={() => setOwnerMenuOpen((prev) => !prev)}
+            >
+              &#x22EF;
+            </button>
+
+            {ownerMenuOpen ? (
+              <div className={styles.ownerMenu} role="menu" aria-label="Acciones">
+                <button type="button" className={styles.ownerMenuItem} role="menuitem" onClick={handleToggleEditing}>
+                  {editing ? 'Cancelar edición' : 'Editar nota'}
+                </button>
+                <button type="button" className={`${styles.ownerMenuItem} ${styles.ownerMenuDanger}`} role="menuitem" onClick={handleDeleteNote} disabled={deleting}>
+                  {deleting ? 'Eliminando...' : 'Eliminar nota'}
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
