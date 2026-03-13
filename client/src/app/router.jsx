@@ -7,6 +7,7 @@ import RegisterPage from '../pages/Register/RegisterPage';
 import FeedPage from '../pages/Feed/FeedPage';
 import MessagesPage from '../pages/Messages/MessagesPage';
 import ProfilePage from '../pages/Profile/ProfilePage';
+import SearchPage from '../pages/Search/SearchPage';
 import NotFoundPage from '../pages/NotFound/NotFoundPage';
 
 const router = createBrowserRouter([
@@ -30,6 +31,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <MessagesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'search',
+        element: (
+          <ProtectedRoute>
+            <SearchPage />
           </ProtectedRoute>
         ),
       },

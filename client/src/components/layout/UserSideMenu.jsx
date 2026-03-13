@@ -84,6 +84,11 @@ function UserSideMenu({
       </Link>
 
       <div className={styles.actions}>
+        <Link to="/search" className={styles.menuAction} onClick={onClose} role="menuitem">
+          <span>Buscar</span>
+          <small>Perfiles y notas</small>
+        </Link>
+
         <button type="button" className={styles.menuAction} onClick={handleSettingsClick} role="menuitem">
           <span>Configuraciones</span>
           <small>Próximamente</small>
