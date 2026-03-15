@@ -12,8 +12,8 @@ import useInfiniteScroll from '../../hooks/useInfiniteScroll';
 import styles from './FeedPage.module.css';
 
 const FEED_SEGMENTS = [
-  { id: 'following', label: 'Siguiendo' },
   { id: 'discover', label: 'Descubrir' },
+  { id: 'following', label: 'Siguiendo' },
 ];
 
 const FEED_SORTS = [
@@ -34,7 +34,7 @@ function FeedPage() {
   const [publishing, setPublishing] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState('');
-  const [segment, setSegment] = useState('following');
+  const [segment, setSegment] = useState('discover');
   const [sort, setSort] = useState('recent');
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
