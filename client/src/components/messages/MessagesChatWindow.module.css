@@ -72,9 +72,9 @@
 }
 
 .headerActionDelete:hover:not(:disabled) {
-  color: #b42318;
-  border-color: rgba(180, 35, 24, 0.35);
-  background: #fef3f2;
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.4);
+  background: rgba(220, 38, 38, 0.1);
 }
 
 .backButton {
@@ -104,7 +104,7 @@
   align-content: start;
   grid-auto-rows: max-content;
   gap: 0.55rem;
-  background: linear-gradient(180deg, rgba(238, 242, 255, 0.35), rgba(255, 255, 255, 0));
+  background: linear-gradient(180deg, rgba(238, 242, 255, 0.35), rgba(248, 250, 252, 0));
 }
 
 .bubbleRow {
@@ -117,7 +117,7 @@
 
 .bubble {
   max-width: min(75%, 540px);
-  background: #f3f4f6;
+  background: var(--color-bg-soft);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 0.65rem 0.75rem;
@@ -156,6 +156,12 @@
   border-radius: 999px;
   padding: 0.75rem 0.95rem;
   outline: none;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.composer input::placeholder {
+  color: var(--color-text-muted);
 }
 
 .composer input:focus {
@@ -250,7 +256,7 @@
 }
 
 .deleteModalCancel {
-  background: var(--color-surface);
+  background: var(--color-bg-soft);
   color: var(--color-text);
 }
 
@@ -258,6 +264,26 @@
   border-color: #b42318;
   background: #b42318;
   color: white;
+}
+
+:global(:root[data-theme='dark']) .messages {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.5), rgba(17, 24, 39, 0.05));
+}
+
+:global(:root[data-theme='dark']) .bubble {
+  background: #1f2937;
+  border-color: #334155;
+}
+
+:global(:root[data-theme='dark']) .bubbleOwnColor {
+  background: #27216a;
+  border-color: rgba(129, 140, 248, 0.45);
+}
+
+:global(:root[data-theme='dark']) .headerActionDelete:hover:not(:disabled) {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.55);
+  background: rgba(127, 29, 29, 0.42);
 }
 
 .deleteModalCancel:disabled,
