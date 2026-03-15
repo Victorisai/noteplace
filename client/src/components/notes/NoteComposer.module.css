@@ -26,6 +26,58 @@
   margin-top: 0.5rem;
 }
 
+.previewSection {
+  margin-top: 0.75rem;
+}
+
+.previewLabel {
+  margin: 0 0 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 150px));
+  justify-content: start;
+  gap: 0.55rem;
+}
+
+.previewCard {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-bg-soft);
+}
+
+.previewImage {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.removeImageButton {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  padding: 0.34rem 0.62rem;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--color-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.removeImageButton:hover {
+  background: white;
+}
+
 .fileInput {
   position: absolute;
   opacity: 0;
@@ -100,6 +152,10 @@
   .uploadButton {
     width: 100%;
     justify-content: center;
+  }
+
+  .previewGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .footer {
