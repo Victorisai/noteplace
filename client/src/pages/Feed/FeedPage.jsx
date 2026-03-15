@@ -145,6 +145,9 @@ function FeedPage() {
       <div className={styles.content}>
         <div className={styles.mainColumn}>
           <NoteComposer onSubmit={handleCreateNote} loading={publishing} />
+        </div>
+        <aside className={styles.sidebar}><NotificationsPanel /></aside>
+        <div className={styles.mainColumn}>
           <div className={styles.feedSortWrap}>
             <p className={styles.sortLabel}>Ver notas por:</p>
             <div className={styles.feedSorts} role="tablist" aria-label="Orden del feed">
@@ -171,7 +174,6 @@ function FeedPage() {
           <div ref={sentinelRef} style={{ height: 1 }} />
           {loadingMore ? <p>Cargando más...</p> : null}
         </div>
-        <aside className={styles.sidebar}><NotificationsPanel /></aside>
       </div>
 
       <ConfirmModal
