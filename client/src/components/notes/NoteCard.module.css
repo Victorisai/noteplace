@@ -212,9 +212,18 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.imagesGridThree .noteImage:first-child {
+.imagesGridThree .imageButton:first-child .noteImage {
   grid-row: span 2;
   min-height: 260px;
+}
+
+.imageButton {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: zoom-in;
 }
 
 .noteImage {
@@ -225,12 +234,117 @@
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
   background: var(--color-bg-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.imageButton:hover .noteImage {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .imagesGridSingle .noteImage {
   height: auto;
   max-height: 460px;
   aspect-ratio: 16 / 10;
+}
+
+.viewerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(10, 14, 25, 0.88);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+.viewerFrame {
+  width: min(100%, 980px);
+  max-height: 90vh;
+  position: relative;
+  border-radius: 24px;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  display: grid;
+  place-items: center;
+  padding: 0 3.1rem;
+}
+
+.viewerImage {
+  width: 100%;
+  max-height: 86vh;
+  object-fit: contain;
+  border-radius: 18px;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45);
+}
+
+.viewerClose {
+  position: absolute;
+  top: -2.35rem;
+  right: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 0.48rem 0.86rem;
+  background: rgba(15, 23, 42, 0.74);
+  color: #f8fafc;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.viewerClose:hover {
+  background: rgba(15, 23, 42, 0.98);
+}
+
+.viewerNavButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.8rem;
+  height: 2.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.7);
+  color: #f8fafc;
+  font-size: 1.55rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.viewerNavButton:hover {
+  background: rgba(2, 6, 23, 0.96);
+}
+
+.viewerNavPrev {
+  left: 0.1rem;
+}
+
+.viewerNavNext {
+  right: 0.1rem;
+}
+
+.viewerCounter {
+  position: absolute;
+  bottom: -2.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 0.34rem 0.75rem;
 }
 
 @media (max-width: 700px) {
@@ -244,7 +358,42 @@
     aspect-ratio: 4 / 3;
   }
 
-  .imagesGridThree .noteImage:first-child {
+  .imagesGridThree .imageButton:first-child .noteImage {
     min-height: 210px;
+  }
+
+  .viewerFrame {
+    border-radius: 14px;
+    padding: 0 0.25rem;
+  }
+
+  .viewerImage {
+    max-height: 78vh;
+    border-radius: 14px;
+  }
+
+  .viewerNavButton {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1.1rem;
+  }
+
+  .viewerNavPrev {
+    left: -0.1rem;
+  }
+
+  .viewerNavNext {
+    right: -0.1rem;
+  }
+
+  .viewerClose {
+    top: -2.1rem;
+    right: 0.2rem;
+    padding: 0.44rem 0.74rem;
+    font-size: 0.8rem;
+  }
+
+  .viewerCounter {
+    bottom: -2rem;
   }
 }

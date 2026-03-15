@@ -30,7 +30,10 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
   const [savingEdit, setSavingEdit] = useState(false);
   const [sendingComment, setSendingComment] = useState(false);
   const [ownerMenuOpen, setOwnerMenuOpen] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
   const ownerMenuRef = useRef(null);
+  const scrollLockRef = useRef({ y: 0, overflow: '', position: '', top: '', width: '', touchAction: '' });
   const imageCount = note.images?.length || 0;
 
   useEffect(() => {
@@ -40,6 +43,8 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
     setCommentsCount(note.comments_count || 0);
     setEditValue(note.content);
     setOwnerMenuOpen(false);
+    setViewerOpen(false);
+    setViewerIndex(0);
   }, [note]);
 
   useEffect(() => {
@@ -59,6 +64,68 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
       document.removeEventListener('touchstart', handleOutsideClick);
     };
   }, [ownerMenuOpen]);
+
+  useEffect(() => {
+    if (!viewerOpen) return undefined;
+
+    const body = document.body;
+    const scrollY = window.scrollY;
+    scrollLockRef.current = {
+      y: scrollY,
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      touchAction: body.style.touchAction,
+    };
+
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    body.style.touchAction = 'none';
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setViewerOpen(false);
+      }
+      if (imageCount > 1 && event.key === 'ArrowLeft') {
+        setViewerIndex((prev) => (prev === 0 ? imageCount - 1 : prev - 1));
+      }
+      if (imageCount > 1 && event.key === 'ArrowRight') {
+        setViewerIndex((prev) => (prev === imageCount - 1 ? 0 : prev + 1));
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      body.style.overflow = scrollLockRef.current.overflow;
+      body.style.position = scrollLockRef.current.position;
+      body.style.top = scrollLockRef.current.top;
+      body.style.width = scrollLockRef.current.width;
+      body.style.touchAction = scrollLockRef.current.touchAction;
+      window.scrollTo(0, scrollLockRef.current.y);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [viewerOpen, imageCount]);
+
+  function handleOpenViewer(index) {
+    setViewerIndex(index);
+    setViewerOpen(true);
+  }
+
+  function handleCloseViewer() {
+    setViewerOpen(false);
+  }
+
+  function handlePrevImage() {
+    setViewerIndex((prev) => (prev === 0 ? imageCount - 1 : prev - 1));
+  }
+
+  function handleNextImage() {
+    setViewerIndex((prev) => (prev === imageCount - 1 ? 0 : prev + 1));
+  }
 
   async function handleToggleLike() {
     if (!isAuthenticated) return showToast('Debes iniciar sesión para dar like', 'error');
@@ -196,11 +263,66 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
             imageCount >= 4 ? styles.imagesGridFour : '',
           ].join(' ').trim()}
         >
-          {note.images.map((image) => (
-            <img key={image.id} src={toAbsoluteAssetUrl(image.image_url)} alt="Imagen de la nota" className={styles.noteImage} />
+          {note.images.map((image, index) => (
+            <button
+              key={image.id}
+              type="button"
+              className={styles.imageButton}
+              onClick={() => handleOpenViewer(index)}
+              aria-label={`Ver imagen ${index + 1} en grande`}
+            >
+              <img src={toAbsoluteAssetUrl(image.image_url)} alt={`Imagen ${index + 1} de la nota`} className={styles.noteImage} />
+            </button>
           ))}
         </div>
       )}
+
+      {viewerOpen && imageCount > 0 ? (
+        <div
+          className={styles.viewerOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Vista previa de imágenes"
+          onClick={handleCloseViewer}
+        >
+          <div className={styles.viewerFrame} onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              className={styles.viewerClose}
+              onClick={handleCloseViewer}
+              aria-label="Cerrar visor de imágenes"
+            >
+              Cerrar
+            </button>
+            {imageCount > 1 ? (
+              <button
+                type="button"
+                className={`${styles.viewerNavButton} ${styles.viewerNavPrev}`}
+                onClick={handlePrevImage}
+                aria-label="Imagen anterior"
+              >
+                &#8249;
+              </button>
+            ) : null}
+            <img
+              src={toAbsoluteAssetUrl(note.images[viewerIndex]?.image_url)}
+              alt={`Imagen ${viewerIndex + 1} de ${imageCount}`}
+              className={styles.viewerImage}
+            />
+            {imageCount > 1 ? (
+              <button
+                type="button"
+                className={`${styles.viewerNavButton} ${styles.viewerNavNext}`}
+                onClick={handleNextImage}
+                aria-label="Imagen siguiente"
+              >
+                &#8250;
+              </button>
+            ) : null}
+            {imageCount > 1 ? <p className={styles.viewerCounter}>{viewerIndex + 1} / {imageCount}</p> : null}
+          </div>
+        </div>
+      ) : null}
 
       <div className={styles.meta}><span>{formatDate(note.created_at)}</span></div>
 
