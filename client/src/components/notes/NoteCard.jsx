@@ -31,6 +31,7 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
   const [sendingComment, setSendingComment] = useState(false);
   const [ownerMenuOpen, setOwnerMenuOpen] = useState(false);
   const ownerMenuRef = useRef(null);
+  const imageCount = note.images?.length || 0;
 
   useEffect(() => {
     setLiked(note.is_liked);
@@ -185,8 +186,16 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
         <p className={styles.content}>{note.content}</p>
       )}
 
-      {!!note.images?.length && (
-        <div className={styles.imagesGrid}>
+      {imageCount > 0 && (
+        <div
+          className={[
+            styles.imagesGrid,
+            imageCount === 1 ? styles.imagesGridSingle : '',
+            imageCount === 2 ? styles.imagesGridTwo : '',
+            imageCount === 3 ? styles.imagesGridThree : '',
+            imageCount >= 4 ? styles.imagesGridFour : '',
+          ].join(' ').trim()}
+        >
           {note.images.map((image) => (
             <img key={image.id} src={toAbsoluteAssetUrl(image.image_url)} alt="Imagen de la nota" className={styles.noteImage} />
           ))}
