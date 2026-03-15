@@ -132,13 +132,39 @@
 }
 
 .interactionButton {
-  background: #f3f4f6;
-  color: #111827;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  min-width: 2.8rem;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-.liked {
-  background: #fee2e2;
-  color: #b91c1c;
+.interactionButton:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #1f2937;
+}
+
+.interactionIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.likeActive {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #be123c;
+}
+
+.bookmarkActive {
+  background: var(--color-primary-soft);
+  border-color: #c7d2fe;
+  color: var(--color-primary);
 }
 
 .commentsSection {

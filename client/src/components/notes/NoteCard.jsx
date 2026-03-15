@@ -327,9 +327,62 @@ function NoteCard({ note, onDelete, onUpdate, deleting }) {
       <div className={styles.meta}><span>{formatDate(note.created_at)}</span></div>
 
       <div className={styles.interactions}>
-        <button type="button" className={`${styles.interactionButton} ${liked ? styles.liked : ''}`} onClick={handleToggleLike}>❤️ {likesCount}</button>
-        <button type="button" className={`${styles.interactionButton} ${bookmarked ? styles.liked : ''}`} onClick={handleToggleBookmark}>🔖</button>
-        <button type="button" className={styles.interactionButton} onClick={handleToggleComments}>💬 {commentsCount}</button>
+        <button
+          type="button"
+          className={`${styles.interactionButton} ${liked ? styles.likeActive : ''}`}
+          onClick={handleToggleLike}
+          aria-label={liked ? 'Quitar me gusta' : 'Dar me gusta'}
+        >
+          <svg className={styles.interactionIcon} viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 20.4c-.3 0-.6-.1-.8-.3C9 18.3 3.5 14.2 3.5 9.5A4.5 4.5 0 0 1 8 5c1.7 0 3.1.8 4 2.1A4.9 4.9 0 0 1 16 5a4.5 4.5 0 0 1 4.5 4.5c0 4.7-5.5 8.8-7.7 10.6-.2.2-.5.3-.8.3Z"
+              fill={liked ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span>{likesCount}</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.interactionButton} ${bookmarked ? styles.bookmarkActive : ''}`}
+          onClick={handleToggleBookmark}
+          aria-label={bookmarked ? 'Quitar guardado' : 'Guardar nota'}
+        >
+          <svg className={styles.interactionIcon} viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M7 4.8h10a1 1 0 0 1 1 1v14.4l-6-3.3-6 3.3V5.8a1 1 0 0 1 1-1Z"
+              fill={bookmarked ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className={styles.interactionButton}
+          onClick={handleToggleComments}
+          aria-label="Ver comentarios"
+        >
+          <svg className={styles.interactionIcon} viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M6.8 6.2h10.4A2.8 2.8 0 0 1 20 9v6a2.8 2.8 0 0 1-2.8 2.8h-6l-3.7 2.9v-2.9H6.8A2.8 2.8 0 0 1 4 15V9a2.8 2.8 0 0 1 2.8-2.8Z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="9.2" cy="12" r="0.95" fill="currentColor" />
+            <circle cx="12" cy="12" r="0.95" fill="currentColor" />
+            <circle cx="14.8" cy="12" r="0.95" fill="currentColor" />
+          </svg>
+          <span>{commentsCount}</span>
+        </button>
       </div>
 
       {showComments ? (
