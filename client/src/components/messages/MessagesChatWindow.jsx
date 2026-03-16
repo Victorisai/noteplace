@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import useToast from '../../hooks/useToast';
 import { useAuth } from '../../context/AuthContext';
@@ -50,6 +50,7 @@ function MessagesChatWindow({ isMobile }) {
   const composerInputRef = useRef(null);
   const composerFileInputRef = useRef(null);
   const keyboardScrollRafRef = useRef(null);
+  const settleScrollTimeoutRef = useRef(null);
   const keepBottomUntilRef = useRef(0);
   const composerFileInputId = useId();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -71,15 +72,40 @@ function MessagesChatWindow({ isMobile }) {
     [selectedImages],
   );
 
-  useEffect(() => {
+  function scrollMessagesToBottom() {
     const container = messagesRef.current;
     if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }
 
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior: 'smooth',
+  useEffect(() => {
+    keepBottomUntilRef.current = Date.now() + 3000;
+  }, [activeConversationId]);
+
+  useLayoutEffect(() => {
+    scrollMessagesToBottom();
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        scrollMessagesToBottom();
+      });
     });
+
+    if (settleScrollTimeoutRef.current) {
+      window.clearTimeout(settleScrollTimeoutRef.current);
+    }
+    settleScrollTimeoutRef.current = window.setTimeout(() => {
+      scrollMessagesToBottom();
+      settleScrollTimeoutRef.current = null;
+    }, 180);
   }, [messages, activeConversation?.id]);
+
+  useEffect(() => () => {
+    if (settleScrollTimeoutRef.current) {
+      window.clearTimeout(settleScrollTimeoutRef.current);
+      settleScrollTimeoutRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     if (!isMobile || !activeConversation?.id) return undefined;
@@ -152,6 +178,18 @@ function MessagesChatWindow({ isMobile }) {
 
   function handleComposerBlur() {
     keepBottomUntilRef.current = Date.now() + 700;
+  }
+
+  function handleMessageMediaLoad() {
+    const container = messagesRef.current;
+    if (!container) return;
+
+    const nearBottom =
+      (container.scrollHeight - (container.scrollTop + container.clientHeight)) <= NEAR_BOTTOM_THRESHOLD_PX;
+    const shouldKeepBottom = Date.now() < keepBottomUntilRef.current;
+
+    if (!nearBottom && !shouldKeepBottom) return;
+    scrollMessagesToBottom();
   }
 
   useEffect(() => {
@@ -383,6 +421,8 @@ function MessagesChatWindow({ isMobile }) {
                         src={toAbsoluteAssetUrl(message.image_url)}
                         alt="Imagen compartida en el chat"
                         loading="lazy"
+                        onLoad={handleMessageMediaLoad}
+                        onError={handleMessageMediaLoad}
                       />
                       {messageText ? (
                         <p className={`${styles.mediaCaption} ${isOwn ? styles.mediaCaptionOwn : ''}`}>
