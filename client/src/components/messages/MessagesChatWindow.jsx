@@ -64,6 +64,8 @@ function MessagesChatWindow({ isMobile }) {
       : []),
     [selectedImagesState, activeConversationId],
   );
+  const hasComposerText = composer.trim().length > 0;
+  const shouldShowAttachButton = selectedImages.length > 0 || !hasComposerText;
   const imagePreviews = useMemo(
     () => selectedImages.map((file) => ({
       key: `${file.name}-${file.size}-${file.lastModified}`,
@@ -478,24 +480,26 @@ function MessagesChatWindow({ isMobile }) {
                 maxLength={1200}
               />
 
-              <button
-                type="button"
-                className={styles.attachButton}
-                onClick={handleOpenImagePicker}
-                aria-label="Agregar fotos"
-                title="Agregar fotos"
-                disabled={sending || selectedImages.length >= MAX_COMPOSER_IMAGES}
-              >
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M4.75 7.5C4.75 6.12 5.87 5 7.25 5H16.75C18.13 5 19.25 6.12 19.25 7.5V16.5C19.25 17.88 18.13 19 16.75 19H7.25C5.87 19 4.75 17.88 4.75 16.5V7.5Z" stroke="currentColor" strokeWidth="1.6" />
-                  <path d="M8 14.25L10.3 11.95C10.7 11.55 11.35 11.55 11.75 11.95L14 14.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M13.35 13.55L13.95 12.95C14.35 12.55 15 12.55 15.4 12.95L16.75 14.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  <circle cx="9.25" cy="9.1" r="1.15" stroke="currentColor" strokeWidth="1.6" />
-                </svg>
-                {selectedImages.length ? (
-                  <span>{selectedImages.length}</span>
-                ) : null}
-              </button>
+              {shouldShowAttachButton ? (
+                <button
+                  type="button"
+                  className={styles.attachButton}
+                  onClick={handleOpenImagePicker}
+                  aria-label="Agregar fotos"
+                  title="Agregar fotos"
+                  disabled={sending || selectedImages.length >= MAX_COMPOSER_IMAGES}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4.75 7.5C4.75 6.12 5.87 5 7.25 5H16.75C18.13 5 19.25 6.12 19.25 7.5V16.5C19.25 17.88 18.13 19 16.75 19H7.25C5.87 19 4.75 17.88 4.75 16.5V7.5Z" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="M8 14.25L10.3 11.95C10.7 11.55 11.35 11.55 11.75 11.95L14 14.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M13.35 13.55L13.95 12.95C14.35 12.55 15 12.55 15.4 12.95L16.75 14.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="9.25" cy="9.1" r="1.15" stroke="currentColor" strokeWidth="1.6" />
+                  </svg>
+                  {selectedImages.length ? (
+                    <span>{selectedImages.length}</span>
+                  ) : null}
+                </button>
+              ) : null}
 
               <input
                 id={composerFileInputId}
@@ -507,7 +511,7 @@ function MessagesChatWindow({ isMobile }) {
                 onChange={handleSelectImages}
               />
 
-              <button type="submit" disabled={sending || (!composer.trim() && !selectedImages.length)}>
+              <button type="submit" disabled={sending || (!hasComposerText && !selectedImages.length)}>
                 {sending ? 'Enviando...' : 'Enviar'}
               </button>
             </div>
