@@ -19,6 +19,8 @@ import {
 import Avatar from '../ui/Avatar';
 import styles from './MessagesChatWindow.module.css';
 
+const NEAR_BOTTOM_THRESHOLD_PX = 72;
+
 function formatTime(dateString) {
   return new Intl.DateTimeFormat('es-MX', {
     hour: '2-digit',
@@ -44,6 +46,7 @@ function MessagesChatWindow({ isMobile }) {
   const messagesRef = useRef(null);
   const composerInputRef = useRef(null);
   const keyboardScrollRafRef = useRef(null);
+  const keepBottomUntilRef = useRef(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
@@ -63,21 +66,29 @@ function MessagesChatWindow({ isMobile }) {
       const container = messagesRef.current;
       const composerInput = composerInputRef.current;
       if (!container || !composerInput) return;
-      if (document.activeElement !== composerInput) return;
+
+      const isComposerFocused = document.activeElement === composerInput;
+      const shouldKeepBottom = Date.now() < keepBottomUntilRef.current;
+      const nearBottomBeforeResize =
+        (container.scrollHeight - (container.scrollTop + container.clientHeight)) <= NEAR_BOTTOM_THRESHOLD_PX;
+
+      if (!isComposerFocused && !shouldKeepBottom && !nearBottomBeforeResize) return;
 
       if (keyboardScrollRafRef.current) {
         window.cancelAnimationFrame(keyboardScrollRafRef.current);
       }
 
       keyboardScrollRafRef.current = window.requestAnimationFrame(() => {
-        const nextContainer = messagesRef.current;
-        if (!nextContainer) return;
+        window.requestAnimationFrame(() => {
+          const nextContainer = messagesRef.current;
+          if (!nextContainer) return;
 
-        nextContainer.scrollTo({
-          top: nextContainer.scrollHeight,
-          behavior: 'auto',
+          nextContainer.scrollTo({
+            top: nextContainer.scrollHeight,
+            behavior: 'auto',
+          });
+          keyboardScrollRafRef.current = null;
         });
-        keyboardScrollRafRef.current = null;
       });
     };
 
@@ -98,6 +109,7 @@ function MessagesChatWindow({ isMobile }) {
   function handleComposerFocus() {
     const container = messagesRef.current;
     if (!container) return;
+    keepBottomUntilRef.current = Date.now() + 2000;
 
     container.scrollTo({
       top: container.scrollHeight,
@@ -114,6 +126,10 @@ function MessagesChatWindow({ isMobile }) {
         });
       });
     });
+  }
+
+  function handleComposerBlur() {
+    keepBottomUntilRef.current = Date.now() + 700;
   }
 
   useEffect(() => {
@@ -254,6 +270,7 @@ function MessagesChatWindow({ isMobile }) {
               value={composer}
               onChange={(event) => dispatch(setComposer(event.target.value))}
               onFocus={handleComposerFocus}
+              onBlur={handleComposerBlur}
               maxLength={1200}
             />
             <button type="submit" disabled={sending || !composer.trim()}>
