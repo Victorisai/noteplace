@@ -42,6 +42,8 @@ function MessagesChatWindow({ isMobile }) {
   const currentUserId = user?.id;
 
   const messagesRef = useRef(null);
+  const composerInputRef = useRef(null);
+  const keyboardScrollRafRef = useRef(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
@@ -53,6 +55,66 @@ function MessagesChatWindow({ isMobile }) {
       behavior: 'smooth',
     });
   }, [messages, activeConversation?.id]);
+
+  useEffect(() => {
+    if (!isMobile || !activeConversation?.id) return undefined;
+
+    const handleViewportChange = () => {
+      const container = messagesRef.current;
+      const composerInput = composerInputRef.current;
+      if (!container || !composerInput) return;
+      if (document.activeElement !== composerInput) return;
+
+      if (keyboardScrollRafRef.current) {
+        window.cancelAnimationFrame(keyboardScrollRafRef.current);
+      }
+
+      keyboardScrollRafRef.current = window.requestAnimationFrame(() => {
+        const nextContainer = messagesRef.current;
+        if (!nextContainer) return;
+
+        nextContainer.scrollTo({
+          top: nextContainer.scrollHeight,
+          behavior: 'auto',
+        });
+        keyboardScrollRafRef.current = null;
+      });
+    };
+
+    const visualViewport = window.visualViewport;
+    visualViewport?.addEventListener('resize', handleViewportChange);
+    visualViewport?.addEventListener('scroll', handleViewportChange);
+
+    return () => {
+      visualViewport?.removeEventListener('resize', handleViewportChange);
+      visualViewport?.removeEventListener('scroll', handleViewportChange);
+      if (keyboardScrollRafRef.current) {
+        window.cancelAnimationFrame(keyboardScrollRafRef.current);
+        keyboardScrollRafRef.current = null;
+      }
+    };
+  }, [isMobile, activeConversation?.id]);
+
+  function handleComposerFocus() {
+    const container = messagesRef.current;
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'auto',
+    });
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const nextContainer = messagesRef.current;
+        if (!nextContainer) return;
+        nextContainer.scrollTo({
+          top: nextContainer.scrollHeight,
+          behavior: 'auto',
+        });
+      });
+    });
+  }
 
   useEffect(() => {
     if (!showDeleteModal) return undefined;
@@ -186,10 +248,12 @@ function MessagesChatWindow({ isMobile }) {
 
           <form className={styles.composer} onSubmit={handleSendMessage}>
             <input
+              ref={composerInputRef}
               type="text"
               placeholder="Escribe un mensaje..."
               value={composer}
               onChange={(event) => dispatch(setComposer(event.target.value))}
+              onFocus={handleComposerFocus}
               maxLength={1200}
             />
             <button type="submit" disabled={sending || !composer.trim()}>
