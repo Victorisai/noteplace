@@ -373,18 +373,32 @@ function MessagesChatWindow({ isMobile }) {
               const isOwn = message.sender_id === currentUserId;
               const messageText = String(message.content || '').trim();
               const hasImage = Boolean(message.image_url);
-              return (
-                <div key={message.id} className={`${styles.bubbleRow} ${isOwn ? styles.bubbleOwn : ''}`}>
-                  <div className={`${styles.bubble} ${isOwn ? styles.bubbleOwnColor : ''}`}>
-                    {hasImage ? (
+
+              if (hasImage) {
+                return (
+                  <div key={message.id} className={`${styles.bubbleRow} ${isOwn ? styles.bubbleOwn : ''}`}>
+                    <div className={styles.mediaMessage}>
                       <img
                         className={styles.bubbleImage}
                         src={toAbsoluteAssetUrl(message.image_url)}
                         alt="Imagen compartida en el chat"
                         loading="lazy"
                       />
-                    ) : null}
-                    {messageText ? <p>{messageText}</p> : null}
+                      {messageText ? (
+                        <p className={`${styles.mediaCaption} ${isOwn ? styles.mediaCaptionOwn : ''}`}>
+                          {messageText}
+                        </p>
+                      ) : null}
+                      <span className={styles.mediaTime}>{formatTime(message.created_at)}</span>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div key={message.id} className={`${styles.bubbleRow} ${isOwn ? styles.bubbleOwn : ''}`}>
+                  <div className={`${styles.bubble} ${isOwn ? styles.bubbleOwnColor : ''}`}>
+                    <p>{messageText}</p>
                     <span>{formatTime(message.created_at)}</span>
                   </div>
                 </div>
