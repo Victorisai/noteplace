@@ -124,6 +124,7 @@ const messagesSlice = createSlice({
           id: message.id,
           sender_id: message.sender_id,
           content: message.content,
+          image_url: message.image_url || null,
           created_at: message.created_at,
         },
       };
@@ -254,22 +255,29 @@ export function openConversationFromSearchUser(userId) {
   };
 }
 
-export function sendMessageFromComposer() {
+export function sendMessageFromComposer({ content = undefined, imageFile = null } = {}) {
   return async (dispatch, getState) => {
     const state = getState().messages;
     if (!state.activeConversationId || state.sending) return null;
 
-    const trimmed = state.composer.trim();
-    if (!trimmed) return null;
+    const usesComposerText = content === undefined;
+    const baseContent = usesComposerText ? state.composer : content;
+    const trimmed = String(baseContent || '').trim();
+    if (!trimmed && !imageFile) return null;
 
     dispatch(setSending(true));
 
     try {
-      const data = await sendConversationMessage(state.activeConversationId, trimmed);
+      const data = await sendConversationMessage(state.activeConversationId, {
+        content: trimmed,
+        imageFile,
+      });
       const newMessage = data.message;
       if (!newMessage?.id) return null;
 
-      dispatch(setComposer(''));
+      if (usesComposerText) {
+        dispatch(setComposer(''));
+      }
       dispatch(appendMessageIfMissing(newMessage));
       dispatch(updateConversationWithMessage({
         conversationId: state.activeConversationId,

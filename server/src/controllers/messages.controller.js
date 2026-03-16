@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const {
   getOrCreateConversation,
   listConversationsByUserId,
@@ -58,11 +60,14 @@ async function listMessages(req, res) {
 }
 
 async function sendMessage(req, res) {
+  const imageUrl = req.file ? `/uploads/messages/${req.file.filename}` : null;
+
   try {
     const { message, recipientId } = await sendMessageToConversation({
       conversationId: Number(req.params.conversationId),
       senderId: req.user.id,
       content: req.body.content,
+      imageUrl,
     });
 
     emitMessageToUsers({
@@ -72,6 +77,11 @@ async function sendMessage(req, res) {
 
     return res.status(201).json({ message });
   } catch (error) {
+    if (req.file?.filename) {
+      const uploadedFilePath = path.join(process.cwd(), 'uploads', 'messages', req.file.filename);
+      fs.promises.unlink(uploadedFilePath).catch(() => {});
+    }
+
     return res.status(400).json({ message: error.message || 'Error al enviar mensaje' });
   }
 }

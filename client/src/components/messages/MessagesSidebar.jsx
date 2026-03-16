@@ -23,6 +23,16 @@ function formatConversationTime(dateString) {
   }).format(new Date(dateString));
 }
 
+function getLastMessagePreview(lastMessage) {
+  if (!lastMessage) return 'Inicia una conversación';
+
+  const text = String(lastMessage.content || '').trim();
+  if (text) return text;
+  if (lastMessage.image_url) return 'Foto compartida';
+
+  return 'Inicia una conversación';
+}
+
 function MessagesSidebar() {
   const dispatch = useDispatch();
   const { showToast } = useToast();
@@ -122,7 +132,7 @@ function MessagesSidebar() {
                     </span>
                   </div>
                   <p className={styles.lastMessage}>
-                    {conversation.last_message?.content || 'Inicia una conversación'}
+                    {getLastMessagePreview(conversation.last_message)}
                   </p>
                 </div>
                 {conversation.unread_count > 0 ? (

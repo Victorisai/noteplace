@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import useToast from '../../hooks/useToast';
 import { useAuth } from '../../context/AuthContext';
+import { toAbsoluteAssetUrl } from '../../services/api';
 import {
   deleteActiveConversation,
   sendMessageFromComposer,
@@ -20,6 +21,7 @@ import Avatar from '../ui/Avatar';
 import styles from './MessagesChatWindow.module.css';
 
 const NEAR_BOTTOM_THRESHOLD_PX = 72;
+const MAX_COMPOSER_IMAGES = 4;
 
 function formatTime(dateString) {
   return new Intl.DateTimeFormat('es-MX', {
@@ -42,12 +44,32 @@ function MessagesChatWindow({ isMobile }) {
   const isDeletingConversation = useSelector(selectIsDeletingActiveConversation);
 
   const currentUserId = user?.id;
+  const activeConversationId = activeConversation?.id || null;
 
   const messagesRef = useRef(null);
   const composerInputRef = useRef(null);
+  const composerFileInputRef = useRef(null);
   const keyboardScrollRafRef = useRef(null);
   const keepBottomUntilRef = useRef(0);
+  const composerFileInputId = useId();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedImagesState, setSelectedImagesState] = useState({
+    conversationId: null,
+    files: [],
+  });
+  const selectedImages = useMemo(
+    () => (selectedImagesState.conversationId === activeConversationId
+      ? selectedImagesState.files
+      : []),
+    [selectedImagesState, activeConversationId],
+  );
+  const imagePreviews = useMemo(
+    () => selectedImages.map((file) => ({
+      key: `${file.name}-${file.size}-${file.lastModified}`,
+      previewUrl: URL.createObjectURL(file),
+    })),
+    [selectedImages],
+  );
 
   useEffect(() => {
     const container = messagesRef.current;
@@ -144,12 +166,110 @@ function MessagesChatWindow({ isMobile }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showDeleteModal, isDeletingConversation]);
 
+  useEffect(() => () => {
+    imagePreviews.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+  }, [imagePreviews]);
+
+  useEffect(() => {
+    if (composerFileInputRef.current) {
+      composerFileInputRef.current.value = '';
+    }
+  }, [activeConversationId]);
+
+  function resetComposerFileInput() {
+    if (composerFileInputRef.current) {
+      composerFileInputRef.current.value = '';
+    }
+  }
+
+  function handleSelectImages(event) {
+    const incomingFiles = Array.from(event.target.files || []);
+    if (!incomingFiles.length) return;
+
+    setSelectedImagesState((previousState) => {
+      const previousFiles = previousState.conversationId === activeConversationId
+        ? previousState.files
+        : [];
+      const availableSlots = Math.max(0, MAX_COMPOSER_IMAGES - previousFiles.length);
+      if (!availableSlots) {
+        showToast(`Solo puedes enviar hasta ${MAX_COMPOSER_IMAGES} fotos por mensaje`, 'error');
+        return previousState;
+      }
+
+      const acceptedFiles = incomingFiles.slice(0, availableSlots);
+      if (incomingFiles.length > availableSlots) {
+        showToast(`Solo se agregaron ${availableSlots} foto(s) para respetar el límite`, 'info');
+      }
+
+      return {
+        conversationId: activeConversationId,
+        files: [...previousFiles, ...acceptedFiles],
+      };
+    });
+
+    resetComposerFileInput();
+  }
+
+  function handleRemoveSelectedImage(indexToRemove) {
+    setSelectedImagesState({
+      conversationId: activeConversationId,
+      files: selectedImages.filter((_, index) => index !== indexToRemove),
+    });
+    resetComposerFileInput();
+  }
+
+  function handleOpenImagePicker() {
+    composerFileInputRef.current?.click();
+  }
+
   async function handleSendMessage(event) {
     event.preventDefault();
 
+    const trimmedComposer = composer.trim();
+    if (!trimmedComposer && !selectedImages.length) return;
+
+    let sentImagesCount = 0;
+    let sentComposerText = false;
+
     try {
-      await dispatch(sendMessageFromComposer());
+      if (selectedImages.length) {
+        for (let index = 0; index < selectedImages.length; index += 1) {
+          const imageFile = selectedImages[index];
+          const content = index === 0 ? trimmedComposer : '';
+
+          const sentMessage = await dispatch(sendMessageFromComposer({ content, imageFile }));
+          if (!sentMessage) continue;
+
+          sentImagesCount += 1;
+          if (content) sentComposerText = true;
+        }
+
+        if (sentImagesCount) {
+          setSelectedImagesState({
+            conversationId: activeConversationId,
+            files: selectedImages.slice(sentImagesCount),
+          });
+        }
+
+        if (sentComposerText) {
+          dispatch(setComposer(''));
+        }
+
+        resetComposerFileInput();
+      } else {
+        await dispatch(sendMessageFromComposer());
+      }
     } catch (error) {
+      if (sentImagesCount) {
+        setSelectedImagesState({
+          conversationId: activeConversationId,
+          files: selectedImages.slice(sentImagesCount),
+        });
+      }
+      if (sentComposerText) {
+        dispatch(setComposer(''));
+      }
+      resetComposerFileInput();
       showToast(error.message || 'No se pudo enviar el mensaje', 'error');
     }
   }
@@ -251,10 +371,20 @@ function MessagesChatWindow({ isMobile }) {
 
             {!messagesLoading && messages.map((message) => {
               const isOwn = message.sender_id === currentUserId;
+              const messageText = String(message.content || '').trim();
+              const hasImage = Boolean(message.image_url);
               return (
                 <div key={message.id} className={`${styles.bubbleRow} ${isOwn ? styles.bubbleOwn : ''}`}>
                   <div className={`${styles.bubble} ${isOwn ? styles.bubbleOwnColor : ''}`}>
-                    <p>{message.content}</p>
+                    {hasImage ? (
+                      <img
+                        className={styles.bubbleImage}
+                        src={toAbsoluteAssetUrl(message.image_url)}
+                        alt="Imagen compartida en el chat"
+                        loading="lazy"
+                      />
+                    ) : null}
+                    {messageText ? <p>{messageText}</p> : null}
                     <span>{formatTime(message.created_at)}</span>
                   </div>
                 </div>
@@ -263,19 +393,70 @@ function MessagesChatWindow({ isMobile }) {
           </div>
 
           <form className={styles.composer} onSubmit={handleSendMessage}>
-            <input
-              ref={composerInputRef}
-              type="text"
-              placeholder="Escribe un mensaje..."
-              value={composer}
-              onChange={(event) => dispatch(setComposer(event.target.value))}
-              onFocus={handleComposerFocus}
-              onBlur={handleComposerBlur}
-              maxLength={1200}
-            />
-            <button type="submit" disabled={sending || !composer.trim()}>
-              {sending ? 'Enviando...' : 'Enviar'}
-            </button>
+            {imagePreviews.length ? (
+              <div className={styles.composerMediaPreview} aria-live="polite">
+                {imagePreviews.map((item, index) => (
+                  <div key={`${item.key}-${index}`} className={styles.composerMediaCard}>
+                    <img src={item.previewUrl} alt={`Foto seleccionada ${index + 1}`} />
+                    <button
+                      type="button"
+                      className={styles.composerMediaRemove}
+                      onClick={() => handleRemoveSelectedImage(index)}
+                      aria-label={`Quitar foto ${index + 1}`}
+                      disabled={sending}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className={styles.composerRow}>
+              <input
+                ref={composerInputRef}
+                type="text"
+                placeholder="Escribe un mensaje..."
+                value={composer}
+                onChange={(event) => dispatch(setComposer(event.target.value))}
+                onFocus={handleComposerFocus}
+                onBlur={handleComposerBlur}
+                maxLength={1200}
+              />
+
+              <button
+                type="button"
+                className={styles.attachButton}
+                onClick={handleOpenImagePicker}
+                aria-label="Agregar fotos"
+                title="Agregar fotos"
+                disabled={sending || selectedImages.length >= MAX_COMPOSER_IMAGES}
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4.75 7.5C4.75 6.12 5.87 5 7.25 5H16.75C18.13 5 19.25 6.12 19.25 7.5V16.5C19.25 17.88 18.13 19 16.75 19H7.25C5.87 19 4.75 17.88 4.75 16.5V7.5Z" stroke="currentColor" strokeWidth="1.6" />
+                  <path d="M8 14.25L10.3 11.95C10.7 11.55 11.35 11.55 11.75 11.95L14 14.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M13.35 13.55L13.95 12.95C14.35 12.55 15 12.55 15.4 12.95L16.75 14.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="9.25" cy="9.1" r="1.15" stroke="currentColor" strokeWidth="1.6" />
+                </svg>
+                {selectedImages.length ? (
+                  <span>{selectedImages.length}</span>
+                ) : null}
+              </button>
+
+              <input
+                id={composerFileInputId}
+                ref={composerFileInputRef}
+                className={styles.fileInput}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleSelectImages}
+              />
+
+              <button type="submit" disabled={sending || (!composer.trim() && !selectedImages.length)}>
+                {sending ? 'Enviando...' : 'Enviar'}
+              </button>
+            </div>
           </form>
 
           {showDeleteModal ? (

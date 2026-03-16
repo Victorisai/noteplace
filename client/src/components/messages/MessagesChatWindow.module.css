@@ -130,6 +130,16 @@
   word-break: break-word;
 }
 
+.bubbleImage {
+  display: block;
+  width: min(320px, 100%);
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  margin-bottom: 0.45rem;
+}
+
 .bubble span {
   display: block;
   margin-top: 0.3rem;
@@ -145,13 +155,19 @@
 .composer {
   border-top: 1px solid var(--color-border);
   padding: 0.9rem 1rem;
-  display: flex;
-  align-items: center;
+  display: grid;
   gap: 0.65rem;
 }
 
-.composer input {
+.composerRow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.composerRow input {
   flex: 1;
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: 999px;
   padding: 0.75rem 0.95rem;
@@ -160,15 +176,58 @@
   color: var(--color-text);
 }
 
-.composer input::placeholder {
+.composerRow input::placeholder {
   color: var(--color-text-muted);
 }
 
-.composer input:focus {
+.composerRow input:focus {
   border-color: var(--color-primary);
 }
 
-.composer button {
+.attachButton {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-soft);
+  color: var(--color-text);
+  display: grid;
+  place-items: center;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.attachButton svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.attachButton span {
+  position: absolute;
+  top: -5px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: white;
+  font-size: 0.66rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.attachButton:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.composerRow > button:last-child {
   border: 0;
   border-radius: 999px;
   padding: 0.72rem 1rem;
@@ -176,11 +235,61 @@
   color: white;
   font-weight: 700;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
-.composer button:disabled {
+.composerRow > button:last-child:disabled,
+.attachButton:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.composerMediaPreview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 88px));
+  gap: 0.5rem;
+}
+
+.composerMediaCard {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-soft);
+}
+
+.composerMediaCard img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.composerMediaRemove {
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.35rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.24rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.composerMediaRemove:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.fileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .state {
@@ -280,6 +389,32 @@
   border-color: rgba(129, 140, 248, 0.45);
 }
 
+:global(:root[data-theme='dark']) .bubbleImage {
+  border-color: rgba(71, 85, 105, 0.75);
+}
+
+:global(:root[data-theme='dark']) .attachButton {
+  background: #111827;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+:global(:root[data-theme='dark']) .attachButton:hover:not(:disabled) {
+  border-color: rgba(129, 140, 248, 0.75);
+  color: #c7d2fe;
+  background: rgba(55, 48, 163, 0.25);
+}
+
+:global(:root[data-theme='dark']) .composerMediaCard {
+  border-color: #334155;
+  background: #111827;
+}
+
+:global(:root[data-theme='dark']) .composerMediaRemove {
+  background: rgba(15, 23, 42, 0.85);
+  color: #e2e8f0;
+}
+
 :global(:root[data-theme='dark']) .headerActionDelete:hover:not(:disabled) {
   color: #fca5a5;
   border-color: rgba(239, 68, 68, 0.55);
@@ -320,6 +455,28 @@
 
   .composer {
     padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
+  }
+
+  .composerRow {
+    gap: 0.45rem;
+  }
+
+  .composerRow input {
+    font-size: 0.95rem;
+    padding: 0.7rem 0.88rem;
+  }
+
+  .composerRow > button:last-child {
+    padding: 0.7rem 0.9rem;
+  }
+
+  .attachButton {
+    width: 40px;
+    height: 40px;
+  }
+
+  .composerMediaPreview {
+    grid-template-columns: repeat(auto-fill, minmax(64px, 80px));
   }
 
   .chatHeader {
@@ -366,5 +523,30 @@
   .deleteModalConfirm {
     width: 100%;
     text-align: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .bubble {
+    max-width: min(88%, 540px);
+  }
+
+  .bubbleImage {
+    width: min(260px, 100%);
+  }
+
+  .composer {
+    padding: 0.8rem 0.85rem calc(0.8rem + env(safe-area-inset-bottom));
+  }
+
+  .composerRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 0.4rem;
+  }
+
+  .composerRow > button:last-child {
+    min-width: 78px;
+    justify-self: end;
   }
 }

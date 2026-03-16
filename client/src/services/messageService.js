@@ -21,7 +21,22 @@ export function getConversationMessages(conversationId, { before = null, limit =
   return apiRequest(`/messages/conversations/${conversationId}/messages?${params.toString()}`);
 }
 
-export function sendConversationMessage(conversationId, content) {
+export function sendConversationMessage(conversationId, payload) {
+  const isLegacyPayload = typeof payload === 'string';
+  const content = isLegacyPayload ? payload : payload?.content;
+  const imageFile = isLegacyPayload ? null : payload?.imageFile || null;
+
+  if (imageFile) {
+    const formData = new FormData();
+    if (content) formData.append('content', content);
+    formData.append('image', imageFile);
+
+    return apiRequest(`/messages/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
   return apiRequest(`/messages/conversations/${conversationId}/messages`, {
     method: 'POST',
     body: JSON.stringify({ content }),

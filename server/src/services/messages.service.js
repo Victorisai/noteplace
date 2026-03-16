@@ -8,6 +8,7 @@ function mapMessageRow(row) {
     conversation_id: row.conversation_id,
     sender_id: row.sender_id,
     content: row.content,
+    image_url: row.image_url,
     is_read: row.is_read,
     created_at: row.created_at,
     sender: {
@@ -35,6 +36,7 @@ function mapConversationRow(row) {
       id: row.last_message_id,
       sender_id: row.last_sender_id,
       content: row.last_content,
+      image_url: row.last_image_url,
       created_at: row.last_created_at,
     } : null,
   };
@@ -72,10 +74,40 @@ async function ensureMessagesSchema() {
       id SERIAL PRIMARY KEY,
       conversation_id INTEGER NOT NULL REFERENCES direct_conversations(id) ON DELETE CASCADE,
       sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      content TEXT NOT NULL,
+      content TEXT,
+      image_url TEXT,
       is_read BOOLEAN DEFAULT false,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT direct_messages_content_or_image_check CHECK (
+        (content IS NOT NULL AND LENGTH(BTRIM(content)) > 0) OR image_url IS NOT NULL
+      )
     )`
+  );
+
+  await pool.query(
+    `ALTER TABLE direct_messages
+     ADD COLUMN IF NOT EXISTS image_url TEXT`
+  );
+
+  await pool.query(
+    `ALTER TABLE direct_messages
+     ALTER COLUMN content DROP NOT NULL`
+  );
+
+  await pool.query(
+    `DO $$
+     BEGIN
+       IF NOT EXISTS (
+         SELECT 1
+         FROM pg_constraint
+         WHERE conname = 'direct_messages_content_or_image_check'
+       ) THEN
+         ALTER TABLE direct_messages
+         ADD CONSTRAINT direct_messages_content_or_image_check CHECK (
+           (content IS NOT NULL AND LENGTH(BTRIM(content)) > 0) OR image_url IS NOT NULL
+         );
+       END IF;
+     END $$`
   );
 
   await pool.query(
@@ -119,13 +151,14 @@ async function getConversationByIdForUser({ conversationId, userId }) {
       lm.id AS last_message_id,
       lm.sender_id AS last_sender_id,
       lm.content AS last_content,
+      lm.image_url AS last_image_url,
       lm.created_at AS last_created_at,
       (p.conversation_id IS NOT NULL) AS is_pinned,
       COALESCE(unread.total, 0) AS unread_count
      FROM direct_conversations c
      INNER JOIN users u ON u.id = CASE WHEN c.user_a_id = $1 THEN c.user_b_id ELSE c.user_a_id END
      LEFT JOIN LATERAL (
-       SELECT m.id, m.sender_id, m.content, m.created_at
+       SELECT m.id, m.sender_id, m.content, m.image_url, m.created_at
        FROM direct_messages m
        WHERE m.conversation_id = c.id
        ORDER BY m.id DESC
@@ -165,13 +198,14 @@ async function listConversationsByUserId(userId) {
       lm.id AS last_message_id,
       lm.sender_id AS last_sender_id,
       lm.content AS last_content,
+      lm.image_url AS last_image_url,
       lm.created_at AS last_created_at,
       (p.conversation_id IS NOT NULL) AS is_pinned,
       COALESCE(unread.total, 0) AS unread_count
      FROM direct_conversations c
      INNER JOIN users u ON u.id = CASE WHEN c.user_a_id = $1 THEN c.user_b_id ELSE c.user_a_id END
      LEFT JOIN LATERAL (
-       SELECT m.id, m.sender_id, m.content, m.created_at
+       SELECT m.id, m.sender_id, m.content, m.image_url, m.created_at
        FROM direct_messages m
        WHERE m.conversation_id = c.id
        ORDER BY m.id DESC
@@ -281,6 +315,7 @@ async function listMessagesByConversation({ conversationId, userId, beforeId = n
       m.conversation_id,
       m.sender_id,
       m.content,
+      m.image_url,
       m.is_read,
       m.created_at,
       u.name AS sender_name,
@@ -312,12 +347,15 @@ async function listMessagesByConversation({ conversationId, userId, beforeId = n
   return { messages, hasMore, nextCursor };
 }
 
-async function sendMessageToConversation({ conversationId, senderId, content }) {
+async function sendMessageToConversation({ conversationId, senderId, content, imageUrl = null }) {
   await ensureMessagesSchema();
   const normalizedConversationId = Number(conversationId);
   const trimmedContent = String(content || '').trim();
+  const normalizedImageUrl = imageUrl ? String(imageUrl).trim() : null;
 
-  if (!trimmedContent) throw new Error('El mensaje no puede estar vacío');
+  if (!trimmedContent && !normalizedImageUrl) {
+    throw new Error('Debes enviar un texto o una imagen');
+  }
   if (trimmedContent.length > 1200) throw new Error('El mensaje es demasiado largo');
 
   const conversationResult = await pool.query(
@@ -334,10 +372,10 @@ async function sendMessageToConversation({ conversationId, senderId, content }) 
   const recipientId = conversation.user_a_id === senderId ? conversation.user_b_id : conversation.user_a_id;
 
   const messageResult = await pool.query(
-    `INSERT INTO direct_messages (conversation_id, sender_id, content)
-     VALUES ($1, $2, $3)
-     RETURNING id, conversation_id, sender_id, content, is_read, created_at`,
-    [normalizedConversationId, senderId, trimmedContent]
+    `INSERT INTO direct_messages (conversation_id, sender_id, content, image_url)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, conversation_id, sender_id, content, image_url, is_read, created_at`,
+    [normalizedConversationId, senderId, trimmedContent || null, normalizedImageUrl]
   );
 
   await pool.query(
