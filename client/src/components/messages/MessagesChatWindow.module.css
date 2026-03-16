@@ -152,6 +152,21 @@
   margin-bottom: 0.35rem;
 }
 
+.mediaImageButton {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.mediaImageButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .mediaCaption {
   margin: 0;
   width: 100%;
@@ -362,6 +377,59 @@
   padding: 1rem;
 }
 
+.imagePreviewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 105;
+  background: rgba(2, 6, 23, 0.82);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+.imagePreviewDialog {
+  width: min(100%, 920px);
+  max-height: calc(100dvh - 2rem);
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.imagePreviewImage {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100dvh - 2rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #020617;
+  box-shadow: 0 22px 48px rgba(2, 6, 23, 0.45);
+}
+
+.imagePreviewClose {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #f8fafc;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.imagePreviewClose svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 .deleteModal {
   width: min(100%, 420px);
   background: var(--color-surface);
@@ -461,6 +529,11 @@
   border-color: rgba(129, 140, 248, 0.45);
 }
 
+:global(:root[data-theme='dark']) .imagePreviewClose {
+  border-color: rgba(148, 163, 184, 0.52);
+  background: rgba(2, 6, 23, 0.75);
+}
+
 :global(:root[data-theme='dark']) .headerActionDelete:hover:not(:disabled) {
   color: #fca5a5;
   border-color: rgba(239, 68, 68, 0.55);
@@ -555,6 +628,22 @@
     padding: 0.85rem;
   }
 
+  .imagePreviewOverlay {
+    padding: 0.8rem;
+  }
+
+  .imagePreviewImage {
+    max-height: calc(100dvh - 1.6rem);
+    border-radius: 12px;
+  }
+
+  .imagePreviewClose {
+    top: 0.25rem;
+    right: 0.25rem;
+    width: 34px;
+    height: 34px;
+  }
+
   .deleteModal {
     border-radius: 16px;
     padding: 0.95rem;
@@ -599,5 +688,14 @@
   .composerRow > button:last-child {
     min-width: 78px;
     justify-self: end;
+  }
+
+  .imagePreviewOverlay {
+    padding: 0.55rem;
+  }
+
+  .imagePreviewImage {
+    max-height: calc(100dvh - 1.1rem);
+    border-radius: 10px;
   }
 }

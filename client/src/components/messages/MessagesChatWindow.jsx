@@ -54,6 +54,7 @@ function MessagesChatWindow({ isMobile }) {
   const keepBottomUntilRef = useRef(0);
   const composerFileInputId = useId();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [previewImageSrc, setPreviewImageSrc] = useState('');
   const [selectedImagesState, setSelectedImagesState] = useState({
     conversationId: null,
     files: [],
@@ -206,6 +207,39 @@ function MessagesChatWindow({ isMobile }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showDeleteModal, isDeletingConversation]);
 
+  useEffect(() => {
+    if (!previewImageSrc) return undefined;
+
+    const scrollY = window.scrollY;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPosition = document.body.style.position;
+    const previousBodyTop = document.body.style.top;
+    const previousBodyWidth = document.body.style.width;
+
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+
+    const handleKeyDown = (event) => {
+      if (event.key !== 'Escape') return;
+      setPreviewImageSrc('');
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.position = previousBodyPosition;
+      document.body.style.top = previousBodyTop;
+      document.body.style.width = previousBodyWidth;
+      window.scrollTo(0, scrollY);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [previewImageSrc]);
+
   useEffect(() => () => {
     imagePreviews.forEach((item) => URL.revokeObjectURL(item.previewUrl));
   }, [imagePreviews]);
@@ -260,6 +294,16 @@ function MessagesChatWindow({ isMobile }) {
 
   function handleOpenImagePicker() {
     composerFileInputRef.current?.click();
+  }
+
+  function handleOpenImagePreview(imageUrl) {
+    const absoluteImageUrl = toAbsoluteAssetUrl(imageUrl);
+    if (!absoluteImageUrl) return;
+    setPreviewImageSrc(absoluteImageUrl);
+  }
+
+  function handleCloseImagePreview() {
+    setPreviewImageSrc('');
   }
 
   async function handleSendMessage(event) {
@@ -418,14 +462,21 @@ function MessagesChatWindow({ isMobile }) {
                 return (
                   <div key={message.id} className={`${styles.bubbleRow} ${isOwn ? styles.bubbleOwn : ''}`}>
                     <div className={styles.mediaMessage}>
-                      <img
-                        className={styles.bubbleImage}
-                        src={toAbsoluteAssetUrl(message.image_url)}
-                        alt="Imagen compartida en el chat"
-                        loading="lazy"
-                        onLoad={handleMessageMediaLoad}
-                        onError={handleMessageMediaLoad}
-                      />
+                      <button
+                        type="button"
+                        className={styles.mediaImageButton}
+                        onClick={() => handleOpenImagePreview(message.image_url)}
+                        aria-label="Ver imagen en vista previa"
+                      >
+                        <img
+                          className={styles.bubbleImage}
+                          src={toAbsoluteAssetUrl(message.image_url)}
+                          alt="Imagen compartida en el chat"
+                          loading="lazy"
+                          onLoad={handleMessageMediaLoad}
+                          onError={handleMessageMediaLoad}
+                        />
+                      </button>
                       {messageText ? (
                         <p className={`${styles.mediaCaption} ${isOwn ? styles.mediaCaptionOwn : ''}`}>
                           {messageText}
@@ -516,6 +567,35 @@ function MessagesChatWindow({ isMobile }) {
               </button>
             </div>
           </form>
+
+          {previewImageSrc ? (
+            <div className={styles.imagePreviewOverlay} role="presentation" onClick={handleCloseImagePreview}>
+              <div
+                className={styles.imagePreviewDialog}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Vista previa de imagen"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className={styles.imagePreviewClose}
+                  onClick={handleCloseImagePreview}
+                  aria-label="Cerrar vista previa"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+                    <path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+                  </svg>
+                </button>
+                <img
+                  className={styles.imagePreviewImage}
+                  src={previewImageSrc}
+                  alt="Vista previa de imagen enviada"
+                />
+              </div>
+            </div>
+          ) : null}
 
           {showDeleteModal ? (
             <div
