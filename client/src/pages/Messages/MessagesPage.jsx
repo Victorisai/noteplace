@@ -37,6 +37,7 @@ function MessagesPage() {
     return window.matchMedia('(max-width: 980px)').matches;
   });
   const [shellHeight, setShellHeight] = useState(null);
+  const [shellViewportTop, setShellViewportTop] = useState(0);
   const shellRef = useRef(null);
 
   useDocumentTitle('Mensajes | NotePlace');
@@ -94,25 +95,39 @@ function MessagesPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
+    const isChatOnlyMobile = isMobile && Boolean(activeConversationId);
 
     const syncShellHeight = () => {
       const shell = shellRef.current;
       if (!shell) return;
 
-      const availableHeight = Math.floor(window.innerHeight - shell.getBoundingClientRect().top);
+      const viewportHeight = Math.floor(window.visualViewport?.height ?? window.innerHeight);
+      const viewportTop = Math.max(0, Math.floor(window.visualViewport?.offsetTop ?? 0));
+      const shellTop = isChatOnlyMobile ? 0 : Math.max(0, Math.floor(shell.getBoundingClientRect().top));
+      const availableHeight = Math.max(0, viewportHeight - shellTop);
       const nextHeight = Math.max(320, availableHeight);
+      const nextViewportTop = isChatOnlyMobile ? viewportTop : 0;
+
+      setShellViewportTop((prev) => (prev === nextViewportTop ? prev : nextViewportTop));
       setShellHeight((prev) => (prev === nextHeight ? prev : nextHeight));
     };
 
+    const visualViewport = window.visualViewport;
     syncShellHeight();
     const rafId = window.requestAnimationFrame(syncShellHeight);
     window.addEventListener('resize', syncShellHeight);
-    window.visualViewport?.addEventListener('resize', syncShellHeight);
+    visualViewport?.addEventListener('resize', syncShellHeight);
+    if (isChatOnlyMobile) {
+      visualViewport?.addEventListener('scroll', syncShellHeight);
+    }
 
     return () => {
       window.cancelAnimationFrame(rafId);
       window.removeEventListener('resize', syncShellHeight);
-      window.visualViewport?.removeEventListener('resize', syncShellHeight);
+      visualViewport?.removeEventListener('resize', syncShellHeight);
+      if (isChatOnlyMobile) {
+        visualViewport?.removeEventListener('scroll', syncShellHeight);
+      }
     };
   }, [isMobile, activeConversationId]);
 
@@ -141,13 +156,18 @@ function MessagesPage() {
   if (conversationsLoading) return <PageLoader text="Cargando mensajes..." />;
 
   const showSidebarOnMobile = !activeConversationId;
+  const showChatOnlyMobile = isMobile && !showSidebarOnMobile;
+  const shellStyle = {
+    ...(shellHeight ? { '--messages-shell-height': `${shellHeight}px` } : {}),
+    ...(showChatOnlyMobile ? { '--messages-shell-top': `${shellViewportTop}px` } : {}),
+  };
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} ${showChatOnlyMobile ? styles.pageChatOnlyMobile : ''}`}>
       <div
         ref={shellRef}
-        className={styles.shell}
-        style={shellHeight ? { '--messages-shell-height': `${shellHeight}px` } : undefined}
+        className={`${styles.shell} ${showChatOnlyMobile ? styles.shellChatOnlyMobile : ''}`}
+        style={Object.keys(shellStyle).length ? shellStyle : undefined}
       >
         <div className={`${styles.sidebarPane} ${isMobile && !showSidebarOnMobile ? styles.hiddenOnMobile : ''}`}>
           <MessagesSidebar />

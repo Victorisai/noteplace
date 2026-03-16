@@ -33,6 +33,17 @@
     height: var(--messages-shell-height, calc(100dvh - 130px));
   }
 
+  .shellChatOnlyMobile {
+    position: fixed;
+    top: var(--messages-shell-top, 0px);
+    left: 0;
+    right: 0;
+    height: var(--messages-shell-height, 100dvh);
+    z-index: 12;
+    background: var(--color-bg);
+    overscroll-behavior: none;
+  }
+
   .hiddenOnMobile {
     display: none;
   }
@@ -41,5 +52,11 @@
     width: calc(100% + 2rem);
     margin-left: -1rem;
     margin-right: -1rem;
+  }
+
+  .pageChatOnlyMobile {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
