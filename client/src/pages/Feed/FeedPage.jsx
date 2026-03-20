@@ -20,11 +20,6 @@ const FEED_SORTS = [
   { id: 'trending', label: 'Tendencias' },
 ];
 
-const SEGMENT_HINTS = {
-  following: 'Notas de cuentas que sigues (y las tuyas).',
-  discover: 'Contenido nuevo de personas que todavía no sigues.',
-};
-
 function FeedPage() {
   const { showToast } = useToast();
   const [notes, setNotes] = useState([]);
@@ -138,7 +133,6 @@ function FeedPage() {
             </button>
           ))}
         </div>
-        <p className={styles.segmentHint}>{SEGMENT_HINTS[segment]}</p>
       </div>
 
       <div className={styles.content}>
