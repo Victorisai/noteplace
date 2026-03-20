@@ -180,6 +180,31 @@ function MainHeader({
                 </svg>
               </NavLink>
 
+              <NavLink
+                to="/notifications"
+                className={({ isActive }) =>
+                  isActive ? `${styles.notificationLink} ${styles.active}` : styles.notificationLink
+                }
+                aria-label="Notificaciones"
+                title="Notificaciones"
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M12 4.25C9.65 4.25 7.75 6.15 7.75 8.5V10.68C7.75 11.3 7.56 11.9 7.2 12.39L6.11 13.87C5.53 14.67 6.1 15.8 7.08 15.8H16.92C17.9 15.8 18.47 14.67 17.89 13.87L16.8 12.39C16.44 11.9 16.25 11.3 16.25 10.68V8.5C16.25 6.15 14.35 4.25 12 4.25Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M10.25 18C10.58 18.82 11.23 19.35 12 19.35C12.77 19.35 13.42 18.82 13.75 18"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </NavLink>
+
               <UserMenu
                 user={user}
                 notesCount={notesCount}

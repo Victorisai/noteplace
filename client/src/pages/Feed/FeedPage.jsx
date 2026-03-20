@@ -4,7 +4,6 @@ import NotesList from '../../components/notes/NotesList';
 import SkeletonNoteCard from '../../components/common/SkeletonNoteCard';
 import SearchPanel from '../../components/common/SearchPanel';
 import ConfirmModal from '../../components/ui/ConfirmModal';
-import NotificationsPanel from '../../components/notifications/NotificationsPanel';
 import { createNote, deleteNote, getFeedNotes } from '../../services/noteService';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 import useToast from '../../hooks/useToast';
@@ -145,9 +144,6 @@ function FeedPage() {
       <div className={styles.content}>
         <div className={styles.mainColumn}>
           <NoteComposer onSubmit={handleCreateNote} loading={publishing} />
-        </div>
-        <aside className={styles.sidebar}><NotificationsPanel /></aside>
-        <div className={styles.mainColumn}>
           <div className={styles.feedSortWrap}>
             <p className={styles.sortLabel}>Ver notas por:</p>
             <div className={styles.feedSorts} role="tablist" aria-label="Orden del feed">

@@ -67,7 +67,8 @@
   transition: 0.2s ease;
 }
 
-.messageLink {
+.messageLink,
+.notificationLink {
   width: 42px;
   height: 42px;
   border-radius: 999px;
@@ -77,12 +78,14 @@
   transition: 0.2s ease;
 }
 
-.messageLink svg {
+.messageLink svg,
+.notificationLink svg {
   width: 1.2rem;
   height: 1.2rem;
 }
 
-.messageLink:hover {
+.messageLink:hover,
+.notificationLink:hover {
   background: var(--color-bg-soft);
   color: var(--color-text);
 }
