@@ -6,6 +6,7 @@ import styles from './UserSideMenu.module.css';
 
 function UserSideMenu({
   isOpen,
+  variant = 'drawer',
   user,
   notesCount = 0,
   onClose,
@@ -13,9 +14,10 @@ function UserSideMenu({
   onOpenSettings,
 }) {
   const { theme, toggleTheme } = useTheme();
+  const isDesktopVariant = variant === 'desktop';
 
   useEffect(() => {
-    if (!isOpen) return undefined;
+    if (!isOpen || isDesktopVariant) return undefined;
 
     function handleEscape(event) {
       if (event.key === 'Escape') {
@@ -30,9 +32,9 @@ function UserSideMenu({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose]);
+  }, [isDesktopVariant, isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !user) return null;
 
   function handleSettingsClick() {
     onOpenSettings?.();
@@ -51,16 +53,18 @@ function UserSideMenu({
   return (
     <aside
       id="user-side-menu"
-      className={styles.panel}
+      className={`${styles.panel} ${isDesktopVariant ? styles.panelDesktop : ''}`}
       role="menu"
       aria-label="Menú de usuario"
     >
       <header className={styles.panelHeader}>
         <p>Mi cuenta</p>
-        <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Cerrar menú">
-          <span></span>
-          <span></span>
-        </button>
+        {!isDesktopVariant ? (
+          <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Cerrar menú">
+            <span></span>
+            <span></span>
+          </button>
+        ) : null}
       </header>
 
       <Link

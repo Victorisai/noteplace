@@ -24,6 +24,8 @@ function UserMenu({ user, notesCount = 0, onLogout, onOpenSettings }) {
     };
   }, [isOpen]);
 
+  if (!user) return null;
+
   return (
     <div className={styles.wrapper} ref={menuContainerRef}>
       <button

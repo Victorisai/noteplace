@@ -6,11 +6,13 @@ import styles from './MainLayout.module.css';
 
 function MainHeader({
   isAuthenticated,
+  isMobile,
   user,
   notesCount,
   onLogout,
   onOpenSettings,
   onHeightChange,
+  onVisibilityChange,
 }) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const headerRef = useRef(null);
@@ -128,6 +130,10 @@ function MainHeader({
     };
   }, []);
 
+  useEffect(() => {
+    onVisibilityChange?.(isHeaderVisible);
+  }, [isHeaderVisible, onVisibilityChange]);
+
   return (
     <header
       ref={headerRef}
@@ -205,12 +211,14 @@ function MainHeader({
                 </svg>
               </NavLink>
 
-              <UserMenu
-                user={user}
-                notesCount={notesCount}
-                onLogout={onLogout}
-                onOpenSettings={onOpenSettings}
-              />
+              {isMobile ? (
+                <UserMenu
+                  user={user}
+                  notesCount={notesCount}
+                  onLogout={onLogout}
+                  onOpenSettings={onOpenSettings}
+                />
+              ) : null}
             </>
           ) : (
             <>

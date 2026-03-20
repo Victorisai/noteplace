@@ -4,7 +4,10 @@
   color: var(--color-text);
   --layout-max-width: 1320px;
   --layout-gutter: clamp(0.5rem, 2.5vw, 1.5rem);
+  --content-shell-width: min(var(--layout-max-width), calc(100% - (var(--layout-gutter) * 2)));
   --header-height: 72px;
+  --desktop-user-side-menu-width: clamp(240px, 22vw, 272px);
+  --desktop-user-side-menu-gap: clamp(0.75rem, 1.6vw, 1.25rem);
 }
 
 .header {
@@ -101,9 +104,27 @@
 }
 
 .main {
-  width: min(var(--layout-max-width), calc(100% - (var(--layout-gutter) * 2)));
+  width: var(--content-shell-width);
   margin: 0 auto;
   padding: calc(var(--header-height) + 2rem) 0 3rem;
+}
+
+.mainWithDesktopUserSideMenu {
+  width: min(
+    var(--layout-max-width),
+    calc(
+      100% -
+      var(--desktop-user-side-menu-width) -
+      var(--desktop-user-side-menu-gap) -
+      (var(--layout-gutter) * 2)
+    )
+  );
+  margin-left: calc(
+    var(--layout-gutter) +
+    var(--desktop-user-side-menu-width) +
+    var(--desktop-user-side-menu-gap)
+  );
+  margin-right: var(--layout-gutter);
 }
 
 @media (max-width: 980px) {
@@ -115,6 +136,11 @@
   .nav {
     margin-left: auto;
     justify-content: flex-end;
+  }
+
+  .mainWithDesktopUserSideMenu {
+    width: var(--content-shell-width);
+    margin: 0 auto;
   }
 }
 

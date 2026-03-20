@@ -6,6 +6,7 @@ import { selectActiveConversationId } from '../../features/messages/messagesSlic
 import { getNotesByUsername } from '../../services/noteService';
 import { useToastContext } from '../../context/ToastContext';
 import MainHeader from './MainHeader';
+import UserSideMenu from './UserSideMenu';
 import styles from './MainLayout.module.css';
 
 function MainLayout() {
@@ -16,6 +17,7 @@ function MainLayout() {
   const activeConversationId = useSelector(selectActiveConversationId);
   const [notesCount, setNotesCount] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(72);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.matchMedia('(max-width: 980px)').matches;
@@ -41,6 +43,10 @@ function MainLayout() {
 
   const handleHeaderHeightChange = useCallback((nextHeight) => {
     setHeaderHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+  }, []);
+
+  const handleHeaderVisibilityChange = useCallback((nextIsVisible) => {
+    setIsHeaderVisible((prev) => (prev === nextIsVisible ? prev : nextIsVisible));
   }, []);
 
   useEffect(() => {
@@ -70,24 +76,44 @@ function MainLayout() {
 
   const isMessagesRoute = location.pathname.startsWith('/messages');
   const showChatHeaderOnly = isMessagesRoute && isMobile && Boolean(activeConversationId);
+  const showDesktopUserSideMenu = isAuthenticated && !isMobile;
 
   return (
     <div
       className={styles.app}
-      style={{ '--header-height': `${showChatHeaderOnly ? 0 : headerHeight}px` }}
+      style={{
+        '--header-height': `${showChatHeaderOnly ? 0 : headerHeight}px`,
+        '--header-visible-height': `${showChatHeaderOnly ? 0 : isHeaderVisible ? headerHeight : 0}px`,
+      }}
     >
       {!showChatHeaderOnly ? (
         <MainHeader
           isAuthenticated={isAuthenticated}
+          isMobile={isMobile}
           user={user}
           notesCount={notesCount}
           onLogout={handleLogout}
           onOpenSettings={handleOpenSettings}
           onHeightChange={handleHeaderHeightChange}
+          onVisibilityChange={handleHeaderVisibilityChange}
         />
       ) : null}
 
-      <main className={styles.main} style={showChatHeaderOnly ? { paddingTop: 0 } : undefined}>
+      {showDesktopUserSideMenu ? (
+        <UserSideMenu
+          isOpen
+          variant="desktop"
+          user={user}
+          notesCount={notesCount}
+          onLogout={handleLogout}
+          onOpenSettings={handleOpenSettings}
+        />
+      ) : null}
+
+      <main
+        className={`${styles.main} ${showDesktopUserSideMenu ? styles.mainWithDesktopUserSideMenu : ''}`}
+        style={showChatHeaderOnly ? { paddingTop: 0 } : undefined}
+      >
         <Outlet />
       </main>
     </div>
