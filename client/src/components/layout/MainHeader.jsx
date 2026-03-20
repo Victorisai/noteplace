@@ -6,7 +6,7 @@ import styles from './MainLayout.module.css';
 
 function MainHeader({
   isAuthenticated,
-  isMobile,
+  showUserMenu,
   user,
   notesCount,
   onLogout,
@@ -211,7 +211,7 @@ function MainHeader({
                 </svg>
               </NavLink>
 
-              {isMobile ? (
+              {showUserMenu ? (
                 <UserMenu
                   user={user}
                   notesCount={notesCount}

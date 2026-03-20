@@ -22,6 +22,10 @@ function MainLayout() {
     if (typeof window === 'undefined') return false;
     return window.matchMedia('(max-width: 980px)').matches;
   });
+  const [isDesktopAsideEnabled, setIsDesktopAsideEnabled] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(min-width: 1181px)').matches;
+  });
 
   useEffect(() => {
     async function loadCount() {
@@ -65,6 +69,22 @@ function MainLayout() {
     return () => media.removeListener(syncMedia);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const media = window.matchMedia('(min-width: 1181px)');
+    const syncMedia = () => setIsDesktopAsideEnabled(media.matches);
+    syncMedia();
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', syncMedia);
+      return () => media.removeEventListener('change', syncMedia);
+    }
+
+    media.addListener(syncMedia);
+    return () => media.removeListener(syncMedia);
+  }, []);
+
   function handleLogout() {
     logout();
     navigate('/');
@@ -76,7 +96,8 @@ function MainLayout() {
 
   const isMessagesRoute = location.pathname.startsWith('/messages');
   const showChatHeaderOnly = isMessagesRoute && isMobile && Boolean(activeConversationId);
-  const showDesktopUserSideMenu = isAuthenticated && !isMobile;
+  const showDesktopUserSideMenu = isAuthenticated && isDesktopAsideEnabled;
+  const showHeaderUserMenu = isAuthenticated && !showDesktopUserSideMenu;
 
   return (
     <div
@@ -89,7 +110,7 @@ function MainLayout() {
       {!showChatHeaderOnly ? (
         <MainHeader
           isAuthenticated={isAuthenticated}
-          isMobile={isMobile}
+          showUserMenu={showHeaderUserMenu}
           user={user}
           notesCount={notesCount}
           onLogout={handleLogout}
