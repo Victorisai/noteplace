@@ -7,6 +7,7 @@ import styles from './UserSideMenu.module.css';
 function UserSideMenu({
   isOpen,
   variant = 'drawer',
+  panelRef,
   user,
   notesCount = 0,
   onClose,
@@ -25,12 +26,41 @@ function UserSideMenu({
       }
     }
 
+    const scrollY = window.scrollY;
+    const bodyStyle = document.body.style;
+    const htmlStyle = document.documentElement.style;
+    const previousBodyStyle = {
+      overflow: bodyStyle.overflow,
+      position: bodyStyle.position,
+      top: bodyStyle.top,
+      left: bodyStyle.left,
+      right: bodyStyle.right,
+      width: bodyStyle.width,
+      touchAction: bodyStyle.touchAction,
+    };
+    const previousHtmlOverflow = htmlStyle.overflow;
+
     document.addEventListener('keydown', handleEscape);
-    document.body.style.overflow = 'hidden';
+    htmlStyle.overflow = 'hidden';
+    bodyStyle.overflow = 'hidden';
+    bodyStyle.position = 'fixed';
+    bodyStyle.top = `-${scrollY}px`;
+    bodyStyle.left = '0';
+    bodyStyle.right = '0';
+    bodyStyle.width = '100%';
+    bodyStyle.touchAction = 'none';
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = '';
+      bodyStyle.overflow = previousBodyStyle.overflow;
+      bodyStyle.position = previousBodyStyle.position;
+      bodyStyle.top = previousBodyStyle.top;
+      bodyStyle.left = previousBodyStyle.left;
+      bodyStyle.right = previousBodyStyle.right;
+      bodyStyle.width = previousBodyStyle.width;
+      bodyStyle.touchAction = previousBodyStyle.touchAction;
+      htmlStyle.overflow = previousHtmlOverflow;
+      window.scrollTo(0, scrollY);
     };
   }, [isDesktopVariant, isOpen, onClose]);
 
@@ -52,6 +82,7 @@ function UserSideMenu({
 
   return (
     <aside
+      ref={panelRef}
       id="user-side-menu"
       className={`${styles.panel} ${isDesktopVariant ? styles.panelDesktop : ''}`}
       role="menu"

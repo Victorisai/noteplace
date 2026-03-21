@@ -1,16 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import UserSideMenu from './UserSideMenu';
 import styles from './UserMenu.module.css';
 
 function UserMenu({ user, notesCount = 0, onLogout, onOpenSettings }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuContainerRef = useRef(null);
+  const menuPanelRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) return undefined;
 
     function handlePointerOutside(event) {
-      if (menuContainerRef.current && !menuContainerRef.current.contains(event.target)) {
+      const clickedInsideTrigger = menuContainerRef.current?.contains(event.target);
+      const clickedInsidePanel = menuPanelRef.current?.contains(event.target);
+
+      if (!clickedInsideTrigger && !clickedInsidePanel) {
         setIsOpen(false);
       }
     }
@@ -25,6 +30,20 @@ function UserMenu({ user, notesCount = 0, onLogout, onOpenSettings }) {
   }, [isOpen]);
 
   if (!user) return null;
+
+  const menuNode = (
+    <UserSideMenu
+      isOpen={isOpen}
+      panelRef={menuPanelRef}
+      user={user}
+      notesCount={notesCount}
+      onClose={() => setIsOpen(false)}
+      onLogout={onLogout}
+      onOpenSettings={onOpenSettings}
+    />
+  );
+
+  const panel = typeof document !== 'undefined' ? createPortal(menuNode, document.body) : menuNode;
 
   return (
     <div className={styles.wrapper} ref={menuContainerRef}>
@@ -42,14 +61,7 @@ function UserMenu({ user, notesCount = 0, onLogout, onOpenSettings }) {
         <span className={styles.line}></span>
       </button>
 
-      <UserSideMenu
-        isOpen={isOpen}
-        user={user}
-        notesCount={notesCount}
-        onClose={() => setIsOpen(false)}
-        onLogout={onLogout}
-        onOpenSettings={onOpenSettings}
-      />
+      {panel}
     </div>
   );
 }
