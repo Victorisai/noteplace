@@ -2,7 +2,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  height: 100dvh;
+  height: 100vh;
   width: min(360px, calc(100vw - 1rem));
   background: var(--color-surface);
   border-left: 1px solid var(--color-border);
