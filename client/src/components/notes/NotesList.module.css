@@ -1,6 +1,11 @@
 .list {
   display: grid;
   gap: 1rem;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  touch-action: pan-y;
 }
 
 .empty {
@@ -11,4 +16,5 @@
   text-align: center;
   color: var(--color-text-muted);
   box-shadow: var(--shadow-sm);
+  max-width: 100%;
 }

@@ -4,10 +4,17 @@
   border-radius: 24px;
   padding: 1rem;
   box-shadow: var(--shadow-sm);
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .textarea {
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 120px;
   resize: vertical;
   border: none;
@@ -16,6 +23,11 @@
   font-size: 1rem;
   line-height: 1.7;
   color: var(--color-text);
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .textarea::placeholder {
@@ -149,6 +161,10 @@
 }
 
 @media (max-width: 600px) {
+  .textarea {
+    resize: none;
+  }
+
   .uploadButton {
     width: 100%;
     justify-content: center;

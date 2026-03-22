@@ -1,6 +1,12 @@
 .page {
   display: grid;
   gap: 1.25rem;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
 }
 
 .top {
@@ -25,11 +31,19 @@
   display: grid;
   gap: 1.25rem;
   align-items: start;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .mainColumn {
   display: grid;
   gap: 1rem;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .error {
@@ -50,6 +64,10 @@
 .searchWrap {
   display: grid;
   gap: 0.8rem;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .feedSegments {
