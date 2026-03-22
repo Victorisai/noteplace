@@ -311,6 +311,7 @@ function MessagesChatWindow({ isMobile }) {
 
     const trimmedComposer = composer.trim();
     if (!trimmedComposer && !selectedImages.length) return;
+    keepBottomUntilRef.current = Date.now() + 2600;
 
     let sentImagesCount = 0;
     let sentComposerText = false;
@@ -343,6 +344,11 @@ function MessagesChatWindow({ isMobile }) {
       } else {
         await dispatch(sendMessageFromComposer());
       }
+
+      scrollMessagesToBottom();
+      window.requestAnimationFrame(() => {
+        scrollMessagesToBottom();
+      });
     } catch (error) {
       if (sentImagesCount) {
         setSelectedImagesState({
@@ -354,6 +360,7 @@ function MessagesChatWindow({ isMobile }) {
         dispatch(setComposer(''));
       }
       resetComposerFileInput();
+      keepBottomUntilRef.current = Date.now() + 1200;
       showToast(error.message || 'No se pudo enviar el mensaje', 'error');
     }
   }

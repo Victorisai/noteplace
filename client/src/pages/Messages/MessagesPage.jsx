@@ -23,6 +23,15 @@ import {
 } from '../../services/messagingSocket';
 import styles from './MessagesPage.module.css';
 
+function isEditableElementFocused(element) {
+  if (!element || typeof element.tagName !== 'string') return false;
+
+  const tagName = element.tagName.toUpperCase();
+  if (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') return true;
+
+  return Boolean(element.isContentEditable);
+}
+
 function MessagesPage() {
   const dispatch = useDispatch();
   const { user } = useAuth();
@@ -101,8 +110,14 @@ function MessagesPage() {
       const shell = shellRef.current;
       if (!shell) return;
 
-      const viewportHeight = Math.floor(window.visualViewport?.height ?? window.innerHeight);
-      const viewportTop = Math.max(0, Math.floor(window.visualViewport?.offsetTop ?? 0));
+      const activeElement = document.activeElement;
+      const editableFocused = isEditableElementFocused(activeElement);
+      const viewportHeightLayout = Math.floor(window.innerHeight);
+      const viewportHeightVisual = Math.floor(window.visualViewport?.height ?? viewportHeightLayout);
+      const viewportTopVisual = Math.max(0, Math.floor(window.visualViewport?.offsetTop ?? 0));
+      const shouldUseVisualViewport = isChatOnlyMobile && editableFocused;
+      const viewportHeight = shouldUseVisualViewport ? viewportHeightVisual : viewportHeightLayout;
+      const viewportTop = shouldUseVisualViewport ? viewportTopVisual : 0;
       const shellTop = isChatOnlyMobile ? 0 : Math.max(0, Math.floor(shell.getBoundingClientRect().top));
       const availableHeight = Math.max(0, viewportHeight - shellTop);
       const nextHeight = Math.max(320, availableHeight);
@@ -116,6 +131,7 @@ function MessagesPage() {
     syncShellHeight();
     const rafId = window.requestAnimationFrame(syncShellHeight);
     window.addEventListener('resize', syncShellHeight);
+    document.addEventListener('focusin', syncShellHeight);
     visualViewport?.addEventListener('resize', syncShellHeight);
     if (isChatOnlyMobile) {
       visualViewport?.addEventListener('scroll', syncShellHeight);
@@ -124,6 +140,7 @@ function MessagesPage() {
     return () => {
       window.cancelAnimationFrame(rafId);
       window.removeEventListener('resize', syncShellHeight);
+      document.removeEventListener('focusin', syncShellHeight);
       visualViewport?.removeEventListener('resize', syncShellHeight);
       if (isChatOnlyMobile) {
         visualViewport?.removeEventListener('scroll', syncShellHeight);
